@@ -1,3 +1,5 @@
+# NMRIH Record System
+
 仅适用于 No More Room In Hell !!!
 
 可用于记录玩家的游戏数据，能够区分每个玩家，在每个地图的每一个回合上的游玩数据。
