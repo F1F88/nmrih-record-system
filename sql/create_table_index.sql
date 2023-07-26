@@ -1,3 +1,5 @@
+-- 为了提高插件的插入数据性能，部分表没有添加索引，你可以使用下面语句自行创建
+
 -- ALTER TABLE map_info
 -- ADD INDEX map_info_1(map_name);
 

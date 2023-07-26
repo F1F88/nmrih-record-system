@@ -22,7 +22,7 @@ void LoadPrinterConVar()
     cv_printer_show_play_time = convar.BoolValue;
     (convar = CreateConVar("sm_nr_printer_delay_show_play_time",    "5.0",  "玩家加入多少秒后输出、记录数据")).AddChangeHook(OnPrinterConVarChange);
     cv_printer_delay_show_play_time = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_printer_show_extraction_time",    "0",    "回合开始时, 输出本回合最短/平均撤离耗时")).AddChangeHook(OnPrinterConVarChange);
+    (convar = CreateConVar("sm_nr_printer_show_extraction_time",    "0",    "回合开始时, 输出本回合最短/平均撤离耗时")).AddChangeHook(OnPrinterConVarChange);   //
     cv_printer_show_extraction_time = convar.BoolValue;
     (convar = CreateConVar("sm_nr_printer_show_obj_chain_md5",      "0",    "回合开始时, 输出本回合任务链的 MD5 Hash 值 (可用于区分不同路线)")).AddChangeHook(OnPrinterConVarChange);
     cv_printer_show_obj_chain_md5 = convar.BoolValue;
