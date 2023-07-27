@@ -86,8 +86,15 @@ methodmap NRPrinter __nullable__
 
     public void PrintPlayTime(int client, int steam_id) {
         if( cv_printer_show_play_time ) {
-            char sql_str[64];   // 52 - 2 + INT
-            FormatEx(sql_str, sizeof(sql_str), "SELECT play_time FROM player_stats WHERE steam_id=%d", steam_id);
+            char sql_str[350];
+            FormatEx(sql_str, sizeof(sql_str)
+                // 52 - 2 + INT
+                , "SELECT play_time FROM player_stats WHERE steam_id=%d"
+                , steam_id
+                // 310 - 6 + INT * 3    // Custom Only
+                // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id"
+                // , steam_id, steam_id, steam_id
+            );
             nr_dbi.db.Query(CB_asyncGetPlayTime, sql_str, client, DBPrio_Normal); // 特定回调
         }
     }

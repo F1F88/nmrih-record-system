@@ -15,8 +15,6 @@ int             private_map_map_id;
 float           private_map_start_time;
 float           private_map_end_time;
 MAP_TYPE        private_map_map_type;
-DBStatement     private_map_ins_new_map;
-DBStatement     private_map_upd_map_end;
 
 methodmap NRMap __nullable__
 {
@@ -42,16 +40,6 @@ methodmap NRMap __nullable__
     property MAP_TYPE map_type {
         public get()                    { return view_as<MAP_TYPE>(private_map_map_type); }
         public set(MAP_TYPE value)     { private_map_map_type = value; }
-    }
-
-    property DBStatement ins_new_map {
-        public get()                    { return view_as<DBStatement>(private_map_ins_new_map); }
-        public set(DBStatement value)   { private_map_ins_new_map = value; }
-    }
-
-    property DBStatement upd_map_end {
-        public get()                    { return view_as<DBStatement>(private_map_upd_map_end); }
-        public set(DBStatement value)   { private_map_upd_map_end = value; }
     }
 
     /**

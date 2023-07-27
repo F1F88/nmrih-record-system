@@ -26,12 +26,12 @@
 #include "nmrih-record/player.sp"
 #include "nmrih-record/printer.sp"
 
+
+// #include "nmrih_record/menu.sp"
+
 #if defined INCLUDE_MANAGER
 #include "nmrih-record/manager.sp"
 #endif
-
-
-// #include "nmrih_record/menu.sp"
 
 
 // 从磁盘加载插件后立即调用一次
@@ -43,7 +43,7 @@ public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max
 public void OnPluginStart()
 {
     LoadTranslations("nmrih-record.phrases");   // 加载多语言文本
-    // CreateConVar("sm_nr_version", "1.0");
+    // CreateConVar("sm_nmrih_record_version", "1.0.0");
 
     // * dbi
     nr_dbi = new NRDbi();
@@ -137,18 +137,18 @@ void On_nmrih_practice_ending(Event event, const char[] name, bool dontBroadcast
         nr_dbi.connectSyncDatabase(cv_dbi_conf_name, true);
     }
 
+    char sql_str[160];
     // 更新回合 end_time
     if( nr_round.round_id > 0 )
     {
-        char sql_str[128];
         nr_round.updRoundEnd_sqlStr(sql_str, sizeof(sql_str));
         nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
     }
 
     // 记录回合
     nr_round.practice = true;
-    nr_round.insNewRound(nr_dbi.db, -1, "practice");
-    nr_round.round_id = nr_dbi.syncExecPreSQL_GetInt(nr_round.ins_new_round);
+    nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), -1, "practice");
+    nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
 }
 
 // 地图重置 (练习时间结束也会触发此事件. 用于标记回合结束, 记录新回合)
@@ -192,18 +192,19 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
         nr_objective.GetObjectiveChainIDString(protect_obj_chain, MAX_OBJ_CHAIN_STR_LEN, NULL_STRING);
         nr_objective.GetObjectiveChainMD5(protect_obj_chain, protect_obj_chain_md5, MAX_MD5_LEN);
 
-        nr_round.insNewRound(nr_dbi.db, nr_objective.obj_chain_len, protect_obj_chain_md5);
-        nr_round.round_id = nr_dbi.syncExecPreSQL_GetInt(nr_round.ins_new_round);
+        nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), nr_objective.obj_chain_len, protect_obj_chain_md5);
+        nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
 
         // [提示] 路线ID: {2}
         nr_printer.PtintObjChainMD5(protect_obj_chain_md5);
     }
     else if( nr_map.map_type == MAP_TYPE_NMS )
     {
-        FormatEx(protect_obj_chain_md5, MAX_MD5_LEN, "%s", protect_map_map_name);
+        // FormatEx(protect_obj_chain_md5, MAX_MD5_LEN, "%s", protect_map_map_name);
 
-        nr_round.insNewRound(nr_dbi.db, nr_objective.wave_end, protect_obj_chain_md5);
-        nr_round.round_id = nr_dbi.syncExecPreSQL_GetInt(nr_round.ins_new_round);
+        nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), nr_objective.wave_end, protect_map_map_name);
+        nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
+
         // [提示] 当前地图: {2} | wave数: {3}
         nr_printer.PrintObjWaveMax(nr_objective.wave_end);
     }

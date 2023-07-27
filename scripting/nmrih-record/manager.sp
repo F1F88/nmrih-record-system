@@ -129,7 +129,7 @@ methodmap NRManager __nullable__
         {
             ThrowError(PREFIX_MANAGER..."insNewPlayerSay_sqlStr Database == INVALID_HANDLE");
         }
-        char text_escape[300];
+        char text_escape[432];
         db.Escape(text, text_escape, sizeof(text_escape));
 
         FormatEx(sql_str, max_length, "INSERT INTO player_say SET round_id=%d, steam_id=%d, text='%s'", nr_round.round_id, nr_player_data[client].steam_id, text_escape);
@@ -194,7 +194,7 @@ void On_player_say(Event event, char[] name, bool dontBroadcast)
     char text[256];
     event.GetString("text", text, sizeof(text));
 
-    char sql_str[384];
+    char sql_str[512];
     nr_manager.insNewPlayerSay_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), client, text);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 }

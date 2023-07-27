@@ -30,7 +30,7 @@
     {
         "#format"	"{1:t}"
         "en"        "{1}No one has ever managed to escape this route..."
-        "chi"       "{1}还没有人在此路线下成功逃离..."
+        "chi"       "{1}截至目前, 此路线没有人能活着逃离..."
     }
 
     "Obj Extracted_Taketime"

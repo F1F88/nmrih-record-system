@@ -14,10 +14,6 @@ float           private_round_start_time;
 float           private_round_begin_time;
 float           private_round_extraction_begin_time;
 float           private_round_end_time;
-DBStatement     private_round_ins_new_round;
-DBStatement     private_round_upd_round_end;
-DBStatement     private_round_upd_round_begin;
-DBStatement     private_round_upd_extraction_begin;
 
 methodmap NRRound __nullable__
 {
@@ -55,67 +51,31 @@ methodmap NRRound __nullable__
         public set(float value)         { private_round_end_time = value; }
     }
 
-    property DBStatement ins_new_round {
-        public get()                    { return view_as<DBStatement>(private_round_ins_new_round); }
-        public set(DBStatement value)   { private_round_ins_new_round = value; }
-    }
-
-    property DBStatement upd_round_end {
-        public get()                    { return view_as<DBStatement>(private_round_upd_round_end); }
-        public set(DBStatement value)   { private_round_upd_round_end = value; }
-    }
-
-    property DBStatement upd_round_begin {
-        public get()                    { return view_as<DBStatement>(private_round_upd_round_begin); }
-        public set(DBStatement value)   { private_round_upd_round_begin = value; }
-    }
-
-    property DBStatement upd_extraction_begin {
-        public get()                    { return view_as<DBStatement>(private_round_upd_extraction_begin); }
-        public set(DBStatement value)   { private_round_upd_extraction_begin = value; }
-    }
-
     /**
      * 记录新的回合
      * 新地图的新回合由 practice_ending_time 触发 (practice = true)
      * 其他回合由 nmrih_reset_map 触发 (practice = false)
+     * 返回字符串, 可用于异步执行. Length = 98 - 10 + int(2) + int(3) + int(10) + float + 32
+     * min: 155
+     * recommend: 160
      *
-     * @param db                数据库对象. 用于预编译语句
-     * @param map_id            当前地图 id
+     * @param sql_str           保存返回的 SQL 字符串
+     * @param max_length        SQL 字符串最大长度
      * @param obj_length        本回合 任务链/wave_end
      * @param obj_chain_md5     本回合 任务链/地图名称 md5值
      *
      * @return                  No
-     * @error                   Invalid database handle Or prepare failure
      */
-    public void insNewRound(Database db, const int round_len, const char[] obj_chain_md5) {
+    public void insNewRound_sqlStr(char[] sql_str, int max_length, const int round_len, const char[] obj_chain_md5) {
         this.round_id = 0;
         this.start_time = GetEngineTime();
         this.begin_time = 0.0;
         this.extraction_begin_time = 0.0;
         this.end_time = 0.0;
-
-        if( db == INVALID_HANDLE ) {
-            ThrowError(PREFIX_ROUND..."insNewRound Database == INVALID_HANDLE.");
-        }
-
-        if( this.ins_new_round == INVALID_HANDLE ) {
-            char error[MAX_ERROR_LEN];
-            this.ins_new_round = SQL_PrepareQuery(
-                                    db
-                                    , "INSERT INTO round_info SET map_id=?, practice=?, start_time=?, round_len=?, obj_chain_md5=?"
-                                    , error
-                                    , MAX_ERROR_LEN
-                                );
-            if( this.ins_new_round == INVALID_HANDLE ) {
-                ThrowError(PREFIX_ROUND..."PreSQL ins_new_round Error: %s", error);
-            }
-        }
-        SQL_BindParamInt(this.ins_new_round,        0,  nr_map.map_id);
-        SQL_BindParamInt(this.ins_new_round,        1,  this.practice);
-        SQL_BindParamFloat(this.ins_new_round,      2,  this.start_time);
-        SQL_BindParamInt(this.ins_new_round,        3,  round_len);
-        SQL_BindParamString(this.ins_new_round,     4,  obj_chain_md5,      false);
+        FormatEx(sql_str, max_length
+            , "INSERT INTO round_info SET map_id=%d, practice=%d, start_time=%f, round_len=%d, obj_chain_md5='%s'"
+            , nr_map.map_id,    this.practice,    this.start_time,    round_len,    obj_chain_md5
+        );
     }
 
     /**

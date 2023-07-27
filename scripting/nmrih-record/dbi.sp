@@ -78,6 +78,7 @@ methodmap NRDbi __nullable__
 
     /**
      * 同步执行预编译语句, 并返回 insert id
+     * ! 不推荐, 当数据库重启时预编译语句会失效
      *
      * @param stmt              预编译语句
      *

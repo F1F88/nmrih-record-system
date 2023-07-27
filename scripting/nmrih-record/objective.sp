@@ -8,7 +8,6 @@
 
 char        protect_obj_chain[MAX_OBJ_CHAIN_STR_LEN]
             , protect_obj_chain_md5[MAX_MD5_LEN];
-DBStatement private_objective_ins_new_obj;
 
 methodmap NRObjective __nullable__
 {
@@ -34,11 +33,6 @@ methodmap NRObjective __nullable__
 
     property int wave_end {
         public get()                    { return GetEntProp(FindEntityByClassname(-1, "overlord_wave_controller"), Prop_Data, "m_iEndWave"); }
-    }
-
-    property DBStatement ins_new_obj {
-        public get()                    { return view_as<DBStatement>(private_objective_ins_new_obj); }
-        public set(DBStatement value)   { private_objective_ins_new_obj = value; }
     }
 
     /**
