@@ -12,43 +12,28 @@ methodmap NRManager __nullable__
 
     /**
      * 记录新的玩家来源 (用于管理服务器秩序)
-     * 返回字符串, 可用于异步执行. Length = 119 - 14 + 2 * int + 64 + 4 * 32
-     * min: 205
-     * recommend: 200
+     * 返回字符串, 可用于异步执行. Length = 155 - 16 + int * 2 + 64 + char(32) * 4 + MAX_NAME_LENGTH
+     * min: 384
+     * recommend: 512
      *
-     * @param db                数据库对象. 用于转义字符串
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
-     * @param client            玩家的 client index
+     * @param steam_id          玩家的 steam_id
+     * @param name_escape       玩家名称 (需提前转义)
+     * @param ip_escape         ip 地址 (需提前转义)
+     * @param country_escape    地区 (需提前转义)
+     * @param continent_escape  地区 (需提前转义)
+     * @param region_escape     地区 (需提前转义)
+     * @param city_escape       城市 (需提前转义)
+     * @param create_time       加入时间
      *
      * @return                  No
      * @error                   Invalid database handle Or prepare failure
      */
-    public void insNewPlayerPutIn_sqlStr(Database db, char[] sql_str, int max_length, const int client) {
-        if( db == INVALID_HANDLE ) {
-            ThrowError(PREFIX_PLAYER..."insNewPlayerPutIn_sqlStr Database == INVALID_HANDLE");
-        }
-
-        char ip[32],                    ip_escape[32];
-        char country[32],               country_escape[32];
-        char continent[32],             continent_escape[32];
-        char region[32],                region_escape[32];
-        char city[32],                  city_escape[32];
-
-        GetClientIP(    client,         ip,                     sizeof(ip));
-        GeoipCountryEx( ip,             country,                sizeof(country),            LANG_SERVER);
-        GeoipContinent( ip,             continent,              sizeof(continent),          LANG_SERVER);
-        GeoipRegion(    ip,             region,                 sizeof(region),             LANG_SERVER);
-        GeoipCity(      ip,             city,                   sizeof(city),               LANG_SERVER);
-        db.Escape(      ip,             ip_escape,              sizeof(ip_escape));
-        db.Escape(      country,        country_escape,         sizeof(country_escape));
-        db.Escape(      continent,      continent_escape,       sizeof(continent_escape));
-        db.Escape(      region,         region_escape,          sizeof(region_escape));
-        db.Escape(      city,           city_escape,            sizeof(city_escape));
-
+    public void insNewPlayerPutIn_sqlStr(char[] sql_str, int max_length, const int steam_id, const char[] name_escape, const char[] ip_escape, const char[] country_escape, const char[] continent_escape, const char[] region_escape, const char[] city_escape, const int create_time) {
         FormatEx(sql_str, max_length
-            , "INSERT INTO player_put_in SET round_id=%d, steam_id=%d, `ip`='%s', country='%s', continent='%s', region='%s', city='%s'"
-            , nr_round.round_id,    GetSteamAccountID(client),    ip_escape,    country_escape,    continent_escape,    region_escape,    city_escape
+            , "INSERT INTO player_put_in SET round_id=%d,steam_id=%d,`name`='%s',`ip`='%s',country='%s',continent='%s',region='%s',city='%s',create_time=FROM_UNIXTIME(%d)"
+            , nr_round.round_id,    steam_id,    name_escape,    ip_escape,    country_escape,    continent_escape,    region_escape,    city_escape,    create_time
         );
     }
 

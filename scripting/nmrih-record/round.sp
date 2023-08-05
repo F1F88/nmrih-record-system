@@ -22,32 +22,32 @@ methodmap NRRound __nullable__
     }
 
     property int round_id {                 // 在数据表中的 id
-        public get()                    { return view_as<int>(private_round_round_id); }
+        public get()                    { return private_round_round_id; }
         public set(int value)           { private_round_round_id = value; }
     }
 
     property bool practice {                // 当前是否为练习时间
-        public get()                    { return view_as<bool>(private_round_practice); }
+        public get()                    { return private_round_practice; }
         public set(bool value)          { private_round_practice = value; }
     }
 
     property float start_time {
-        public get()                    { return view_as<float>(private_round_start_time); }
+        public get()                    { return private_round_start_time; }
         public set(float value)         { private_round_start_time = value; }
     }
 
     property float begin_time {
-        public get()                    { return view_as<float>(private_round_begin_time); }
+        public get()                    { return private_round_begin_time; }
         public set(float value)         { private_round_begin_time = value; }
     }
 
     property float extraction_begin_time {
-        public get()                    { return view_as<float>(private_round_extraction_begin_time); }
+        public get()                    { return private_round_extraction_begin_time; }
         public set(float value)         { private_round_extraction_begin_time = value; }
     }
 
     property float end_time {
-        public get()                    { return view_as<float>(private_round_end_time); }
+        public get()                    { return private_round_end_time; }
         public set(float value)         { private_round_end_time = value; }
     }
 
@@ -55,8 +55,8 @@ methodmap NRRound __nullable__
      * 记录新的回合
      * 新地图的新回合由 practice_ending_time 触发 (practice = true)
      * 其他回合由 nmrih_reset_map 触发 (practice = false)
-     * 返回字符串, 可用于异步执行. Length = 98 - 10 + int(2) + int(3) + int(10) + float + 32
-     * min: 155
+     * 返回字符串, 可用于异步执行. Length = 94 - 10 + int(2) + int(3) + int(10) + float + MAX_MAP_NAME_LEN
+     * min: 154
      * recommend: 160
      *
      * @param sql_str           保存返回的 SQL 字符串
@@ -73,7 +73,7 @@ methodmap NRRound __nullable__
         this.extraction_begin_time = 0.0;
         this.end_time = 0.0;
         FormatEx(sql_str, max_length
-            , "INSERT INTO round_info SET map_id=%d, practice=%d, start_time=%f, round_len=%d, obj_chain_md5='%s'"
+            , "INSERT INTO round_info SET map_id=%d,practice=%d,start_time=%f,round_len=%d,obj_chain_md5='%s'"
             , nr_map.map_id,    this.practice,    this.start_time,    round_len,    obj_chain_md5
         );
     }

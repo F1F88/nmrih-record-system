@@ -23,22 +23,22 @@ methodmap NRMap __nullable__
     }
 
     property int map_id {
-        public get()                    { return view_as<int>(private_map_map_id); }
+        public get()                    { return private_map_map_id; }
         public set(int value)           { private_map_map_id = value; }
     }
 
     property float start_time {
-        public get()                    { return view_as<float>(private_map_start_time); }
+        public get()                    { return private_map_start_time; }
         public set(float value)         { private_map_start_time = value; }
     }
 
     property float end_time {
-        public get()                    { return view_as<float>(private_map_end_time); }
+        public get()                    { return private_map_end_time; }
         public set(float value)         { private_map_end_time = value; }
     }
 
     property MAP_TYPE map_type {
-        public get()                    { return view_as<MAP_TYPE>(private_map_map_type); }
+        public get()                    { return private_map_map_type; }
         public set(MAP_TYPE value)     { private_map_map_type = value; }
     }
 

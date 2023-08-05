@@ -69,12 +69,15 @@ enum WEAPON_ID {
 }
 
 float           private_cv_ff_factor
-                , private_cv_bleedout_dmg;
+                , private_cv_bleedout_dmg
+                , private_cv_player_play_time_interval;
 
 int             private_player_steam_id[MAXPLAYERS + 1]
                 , private_player_put_in_time[MAXPLAYERS + 1];
 
-float           private_player_spawn_time[MAXPLAYERS + 1];
+float           private_player_spawn_time[MAXPLAYERS + 1]
+                , private_player_play_time[MAXPLAYERS + 1];
+
 bool            private_player_aready_submit_data[MAXPLAYERS + 1];
 
 int
@@ -143,274 +146,279 @@ methodmap NRPlayerData __nullable__
     }
 
     property int steam_id {
-        public get()                    { return view_as<int>(private_player_steam_id[this.index]); }
+        public get()                    { return private_player_steam_id[this.index]; }
         public set(int value)           { private_player_steam_id[this.index] = value; }
     }
 
     property int put_in_time {
-        public get()                    { return view_as<int>(private_player_put_in_time[this.index]); }
+        public get()                    { return private_player_put_in_time[this.index]; }
         public set(int value)           { private_player_put_in_time[this.index] = value; }
     }
 
     property float spawn_time {
-        public get()                    { return view_as<float>(private_player_spawn_time[this.index]); }
+        public get()                    { return private_player_spawn_time[this.index]; }
         public set(float value)         { private_player_spawn_time[this.index] = value; }
     }
 
+    property float play_time {
+        public get()                    { return private_player_play_time[this.index]; }
+        public set(float value)         { private_player_play_time[this.index] = value; }
+    }
+
     property bool aready_submit_data {
-        public get()                    { return view_as<bool>(private_player_aready_submit_data[this.index]); }
+        public get()                    { return private_player_aready_submit_data[this.index]; }
         public set(bool value)          { private_player_aready_submit_data[this.index] = value; }
     }
 
 
     property int taken_cnt_pills {
-        public get()                    { return view_as<int>(private_player_taken_cnt_pills[this.index]); }
+        public get()                    { return private_player_taken_cnt_pills[this.index]; }
         public set(int value)           { private_player_taken_cnt_pills[this.index] = value; }
     }
 
     property int taken_cnt_gene_therapy {
-        public get()                    { return view_as<int>(private_player_taken_cnt_gene_therapy[this.index]); }
+        public get()                    { return private_player_taken_cnt_gene_therapy[this.index]; }
         public set(int value)           { private_player_taken_cnt_gene_therapy[this.index] = value; }
     }
 
     property int effect_cnt_gene_therapy {
-        public get()                    { return view_as<int>(private_player_effect_cnt_gene_therapy[this.index]); }
+        public get()                    { return private_player_effect_cnt_gene_therapy[this.index]; }
         public set(int value)           { private_player_effect_cnt_gene_therapy[this.index] = value; }
     }
 
 
     property int share_cnt_bandages {
-        public get()                    { return view_as<int>(private_player_share_cnt_bandages[this.index]); }
+        public get()                    { return private_player_share_cnt_bandages[this.index]; }
         public set(int value)           { private_player_share_cnt_bandages[this.index] = value; }
     }
 
     property int share_cnt_first_aid {
-        public get()                    { return view_as<int>(private_player_share_cnt_first_aid[this.index]); }
+        public get()                    { return private_player_share_cnt_first_aid[this.index]; }
         public set(int value)           { private_player_share_cnt_first_aid[this.index] = value; }
     }
 
     property int share_cnt_pills {
-        public get()                    { return view_as<int>(private_player_share_cnt_pills[this.index]); }
+        public get()                    { return private_player_share_cnt_pills[this.index]; }
         public set(int value)           { private_player_share_cnt_pills[this.index] = value; }
     }
 
     property int share_cnt_gene_therapy {
-        public get()                    { return view_as<int>(private_player_share_cnt_gene_therapy[this.index]); }
+        public get()                    { return private_player_share_cnt_gene_therapy[this.index]; }
         public set(int value)           { private_player_share_cnt_gene_therapy[this.index] = value; }
     }
 
     property int receive_cnt_bandages {
-        public get()                    { return view_as<int>(private_player_receive_cnt_bandages[this.index]); }
+        public get()                    { return private_player_receive_cnt_bandages[this.index]; }
         public set(int value)           { private_player_receive_cnt_bandages[this.index] = value; }
     }
 
     property int receive_cnt_first_aid {
-        public get()                    { return view_as<int>(private_player_receive_cnt_first_aid[this.index]); }
+        public get()                    { return private_player_receive_cnt_first_aid[this.index]; }
         public set(int value)           { private_player_receive_cnt_first_aid[this.index] = value; }
     }
 
     property int receive_cnt_pills {
-        public get()                    { return view_as<int>(private_player_receive_cnt_pills[this.index]); }
+        public get()                    { return private_player_receive_cnt_pills[this.index]; }
         public set(int value)           { private_player_receive_cnt_pills[this.index] = value; }
     }
 
     property int receive_cnt_gene_therapy {
-        public get()                    { return view_as<int>(private_player_receive_cnt_gene_therapy[this.index]); }
+        public get()                    { return private_player_receive_cnt_gene_therapy[this.index]; }
         public set(int value)           { private_player_receive_cnt_gene_therapy[this.index] = value; }
     }
 
 
     property int kill_cnt_total {
-        public get()                    { return view_as<int>(private_player_kill_cnt_total[this.index]); }
+        public get()                    { return private_player_kill_cnt_total[this.index]; }
         public set(int value)           { private_player_kill_cnt_total[this.index] = value; }
     }
 
     property int kill_cnt_headSplit {
-        public get()                    { return view_as<int>(private_player_kill_cnt_headSplit[this.index]); }
+        public get()                    { return private_player_kill_cnt_headSplit[this.index]; }
         public set(int value)           { private_player_kill_cnt_headSplit[this.index] = value; }
     }
 
     property int kill_cnt_shambler {
-        public get()                    { return view_as<int>(private_player_kill_cnt_shambler[this.index]); }
+        public get()                    { return private_player_kill_cnt_shambler[this.index]; }
         public set(int value)           { private_player_kill_cnt_shambler[this.index] = value; }
     }
 
     property int kill_cnt_runner {
-        public get()                    { return view_as<int>(private_player_kill_cnt_runner[this.index]); }
+        public get()                    { return private_player_kill_cnt_runner[this.index]; }
         public set(int value)           { private_player_kill_cnt_runner[this.index] = value; }
     }
 
     property int kill_cnt_kid {
-        public get()                    { return view_as<int>(private_player_kill_cnt_kid[this.index]); }
+        public get()                    { return private_player_kill_cnt_kid[this.index]; }
         public set(int value)           { private_player_kill_cnt_kid[this.index] = value; }
     }
 
     property int kill_cnt_turned {
-        public get()                    { return view_as<int>(private_player_kill_cnt_turned[this.index]); }
+        public get()                    { return private_player_kill_cnt_turned[this.index]; }
         public set(int value)           { private_player_kill_cnt_turned[this.index] = value; }
     }
 
     property int kill_cnt_player {
-        public get()                    { return view_as<int>(private_player_kill_cnt_player[this.index]); }
+        public get()                    { return private_player_kill_cnt_player[this.index]; }
         public set(int value)           { private_player_kill_cnt_player[this.index] = value; }
     }
 
     property int kill_cnt_melee {
-        public get()                    { return view_as<int>(private_player_kill_cnt_melee[this.index]); }
+        public get()                    { return private_player_kill_cnt_melee[this.index]; }
         public set(int value)           { private_player_kill_cnt_melee[this.index] = value; }
     }
 
     property int kill_cnt_firearm {
-        public get()                    { return view_as<int>(private_player_kill_cnt_firearm[this.index]); }
+        public get()                    { return private_player_kill_cnt_firearm[this.index]; }
         public set(int value)           { private_player_kill_cnt_firearm[this.index] = value; }
     }
 
     property int kill_cnt_explode {
-        public get()                    { return view_as<int>(private_player_kill_cnt_explode[this.index]); }
+        public get()                    { return private_player_kill_cnt_explode[this.index]; }
         public set(int value)           { private_player_kill_cnt_explode[this.index] = value; }
     }
 
     property int kill_cnt_flame {
-        public get()                    { return view_as<int>(private_player_kill_cnt_flame[this.index]); }
+        public get()                    { return private_player_kill_cnt_flame[this.index]; }
         public set(int value)           { private_player_kill_cnt_flame[this.index] = value; }
     }
 
 
     property int inflict_cnt_player {
-        public get()                    { return view_as<int>(private_player_inflict_cnt_player[this.index]); }
+        public get()                    { return private_player_inflict_cnt_player[this.index]; }
         public set(int value)           { private_player_inflict_cnt_player[this.index] = value; }
     }
 
     property int inflict_dmg_total {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_total[this.index]); }
+        public get()                    { return private_player_inflict_dmg_total[this.index]; }
         public set(int value)           { private_player_inflict_dmg_total[this.index] = value; }
     }
 
     property int inflict_dmg_shambler {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_shambler[this.index]); }
+        public get()                    { return private_player_inflict_dmg_shambler[this.index]; }
         public set(int value)           { private_player_inflict_dmg_shambler[this.index] = value; }
     }
 
     property int inflict_dmg_runner {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_runner[this.index]); }
+        public get()                    { return private_player_inflict_dmg_runner[this.index]; }
         public set(int value)           { private_player_inflict_dmg_runner[this.index] = value; }
     }
 
     property int inflict_dmg_kid {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_kid[this.index]); }
+        public get()                    { return private_player_inflict_dmg_kid[this.index]; }
         public set(int value)           { private_player_inflict_dmg_kid[this.index] = value; }
     }
 
     property int inflict_dmg_turned {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_turned[this.index]); }
+        public get()                    { return private_player_inflict_dmg_turned[this.index]; }
         public set(int value)           { private_player_inflict_dmg_turned[this.index] = value; }
     }
 
     property int inflict_dmg_player {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_player[this.index]); }
+        public get()                    { return private_player_inflict_dmg_player[this.index]; }
         public set(int value)           { private_player_inflict_dmg_player[this.index] = value; }
     }
 
     property int inflict_dmg_melee {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_melee[this.index]); }
+        public get()                    { return private_player_inflict_dmg_melee[this.index]; }
         public set(int value)           { private_player_inflict_dmg_melee[this.index] = value; }
     }
 
     property int inflict_dmg_firearm {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_firearm[this.index]); }
+        public get()                    { return private_player_inflict_dmg_firearm[this.index]; }
         public set(int value)           { private_player_inflict_dmg_firearm[this.index] = value; }
     }
 
     property int inflict_dmg_explode {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_explode[this.index]); }
+        public get()                    { return private_player_inflict_dmg_explode[this.index]; }
         public set(int value)           { private_player_inflict_dmg_explode[this.index] = value; }
     }
 
     property int inflict_dmg_flame {
-        public get()                    { return view_as<int>(private_player_inflict_dmg_flame[this.index]); }
+        public get()                    { return private_player_inflict_dmg_flame[this.index]; }
         public set(int value)           { private_player_inflict_dmg_flame[this.index] = value; }
     }
 
 
     property int hurt_cnt_total {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_total[this.index]); }
+        public get()                    { return private_player_hurt_cnt_total[this.index]; }
         public set(int value)           { private_player_hurt_cnt_total[this.index] = value; }
     }
 
     property int hurt_cnt_bleed {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_bleed[this.index]); }
+        public get()                    { return private_player_hurt_cnt_bleed[this.index]; }
         public set(int value)           { private_player_hurt_cnt_bleed[this.index] = value; }
     }
 
     property int hurt_cnt_shambler {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_shambler[this.index]); }
+        public get()                    { return private_player_hurt_cnt_shambler[this.index]; }
         public set(int value)           { private_player_hurt_cnt_shambler[this.index] = value; }
     }
 
     property int hurt_cnt_runner {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_runner[this.index]); }
+        public get()                    { return private_player_hurt_cnt_runner[this.index]; }
         public set(int value)           { private_player_hurt_cnt_runner[this.index] = value; }
     }
 
     property int hurt_cnt_kid {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_kid[this.index]); }
+        public get()                    { return private_player_hurt_cnt_kid[this.index]; }
         public set(int value)           { private_player_hurt_cnt_kid[this.index] = value; }
     }
 
     property int hurt_cnt_turned {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_turned[this.index]); }
+        public get()                    { return private_player_hurt_cnt_turned[this.index]; }
         public set(int value)           { private_player_hurt_cnt_turned[this.index] = value; }
     }
 
     property int hurt_cnt_player {
-        public get()                    { return view_as<int>(private_player_hurt_cnt_player[this.index]); }
+        public get()                    { return private_player_hurt_cnt_player[this.index]; }
         public set(int value)           { private_player_hurt_cnt_player[this.index] = value; }
     }
 
     property int hurt_dmg_total {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_total[this.index]); }
+        public get()                    { return private_player_hurt_dmg_total[this.index]; }
         public set(int value)           { private_player_hurt_dmg_total[this.index] = value; }
     }
 
     property int hurt_dmg_bleed {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_bleed[this.index]); }
+        public get()                    { return private_player_hurt_dmg_bleed[this.index]; }
         public set(int value)           { private_player_hurt_dmg_bleed[this.index] = value; }
     }
 
     property int hurt_dmg_shambler {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_shambler[this.index]); }
+        public get()                    { return private_player_hurt_dmg_shambler[this.index]; }
         public set(int value)           { private_player_hurt_dmg_shambler[this.index] = value; }
     }
 
     property int hurt_dmg_runner {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_runner[this.index]); }
+        public get()                    { return private_player_hurt_dmg_runner[this.index]; }
         public set(int value)           { private_player_hurt_dmg_runner[this.index] = value; }
     }
 
     property int hurt_dmg_kid {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_kid[this.index]); }
+        public get()                    { return private_player_hurt_dmg_kid[this.index]; }
         public set(int value)           { private_player_hurt_dmg_kid[this.index] = value; }
     }
 
     property int hurt_dmg_turned {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_turned[this.index]); }
+        public get()                    { return private_player_hurt_dmg_turned[this.index]; }
         public set(int value)           { private_player_hurt_dmg_turned[this.index] = value; }
     }
 
     property int hurt_dmg_player {
-        public get()                    { return view_as<int>(private_player_hurt_dmg_player[this.index]); }
+        public get()                    { return private_player_hurt_dmg_player[this.index]; }
         public set(int value)           { private_player_hurt_dmg_player[this.index] = value; }
     }
 
     /**
      * 撤离、离开游戏、回合重启
      * 死亡为特殊情况: 初始加入, 死亡，中途复活
-     * Todo: 中途加入
      */
     public void cleanup_stats() {
         // this.aready_submit_data     // * 只在复活时设为 false
         // this.steam_id               // * 只在玩家加入和获取授权时覆盖
         // this.put_in_time            // * 只在加入时覆盖
+        // this.play_time              // * 当玩家在游戏中, 每隔一段时间都会更新
         this.spawn_time             = 0.0;
 
         this.taken_cnt_pills        = this.taken_cnt_gene_therapy   = this.effect_cnt_gene_therapy  =
@@ -446,64 +454,68 @@ methodmap NRPlayerFunc __nullable__
     }
 
     property float ff_factor {
-        public get()                    { return view_as<float>(private_cv_ff_factor); }
+        public get()                    { return private_cv_ff_factor; }
+    }
+
+    property float bleedout_dmg {
+        public get()                    { return private_cv_bleedout_dmg; }
+    }
+
+    property float play_time_interval {
+        public get()                    { return private_cv_player_play_time_interval; }
     }
 
     /**
      * 玩家首次进入服务器, 为其新增一条统计信息
-    //  * 返回字符串, 可用于异步执行. Length = 54 - 2 + int
-    //  * min: 64
-    //  * recommend: 64
-     * 返回字符串, 可用于异步执行. Length = 119 - 4 + 2 * int
+    //  * 返回字符串, 可用于异步执行. Length = 119 - 4 + 2 * int = 135
+     * 返回字符串, 可用于异步执行. Length = 51 - 2 + int
+     * min: 64
+     * recommend: 64
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
      * @param client            玩家的 client index
-     * @param name_escape       玩家名称 (需要自己提前转义)
+     * @param name_escape       玩家名称 (需提前转义)
      *
      * @return                  No
      */
     public void insNewPlayerStats_sqlStr(char[] sql_str, int max_length, const int client) {
         FormatEx(sql_str, max_length
-            // , "INSERT IGNORE INTO player_stats (steam_id) VALUES (%d)"
-            , "INSERT INTO player_stats (steam_id) SELECT %d FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_stats WHERE steam_id=%d)"
-            , nr_player_data[client].steam_id,    nr_player_data[client].steam_id
+            // , "INSERT INTO player_stats (steam_id) SELECT %d FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_stats WHERE steam_id=%d)"
+            , "INSERT IGNORE INTO player_stats(steam_id)VALUES(%d)"
+            , nr_player_data[client].steam_id
         );
     }
 
     /**
      * 记录新的玩家名字
-    //  * 返回字符串, 可用于异步执行. Length = 65 - 4 + int + MAX_NAME_LENGTH
-    //  * min: 199
-    //  * recommend: 200
-     * 返回字符串, 可用于异步执行. Length = 147 - 8 + 2 * int + 2 * MAX_NAME_LENGTH
-     * min: 415
-     * recommend: 384
+    //  * 返回字符串, 可用于异步执行. Length = 147 - 8 + 2 * int + 2 * MAX_NAME_LENGTH
+    //  * min: 415
+    //  * recommend: 384
+     * 返回字符串, 可用于异步执行. Length = 99 - 4 + int + MAX_NAME_LENGTH
+     * min: 169
+     * recommend: 256
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
-     * @param client            玩家的 client index
-     * @param name_escape       玩家名称 (需要自己提前转义)
+     * @param steam_id          玩家的 steam_id
+     * @param name_escape       玩家名称 ( 转义后 )
      *
      * @return                  No
      */
-    public void insNewPlayerName_sqlStr(char[] sql_str, int max_length, const int client) {
-        char name[MAX_NAME_LENGTH], name_escape[MAX_NAME_LENGTH];
-        GetClientName(client, name, MAX_NAME_LENGTH);
-        nr_dbi.db.Escape(name, name_escape, sizeof(name_escape));
-
+    public void insNewPlayerName_sqlStr(char[] sql_str, int max_length, const int steam_id, const char[] name_escape) {
         FormatEx(sql_str, max_length
-            // , "INSERT IGNORE INTO player_name (steam_id, name) VALUES (%d, '%s')"
-            , "INSERT INTO player_name (steam_id, `name`) SELECT %d, '%s' FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_name WHERE steam_id=%d AND `name`='%s')"
-            , nr_player_data[client].steam_id,    name_escape,    nr_player_data[client].steam_id,    name_escape
+            // , "INSERT INTO player_name (steam_id, `name`) SELECT %d, '%s' FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_name WHERE steam_id=%d AND `name`='%s')"
+            , "INSERT INTO player_name (steam_id,name) VALUES (%d,'%s') ON DUPLICATE KEY UPDATE name=VALUES(name);"
+            , steam_id,    name_escape
         );
     }
 
 
     /**
      * 记录回合数据
-     * 返回字符串, 可用于异步执行. Length = 1128 - 96 + char(10) + int(1) * 3 + int(2) * 10 + int(3) * 17 + int(8) * 19  + float * 2
-     * min: 1245
+     * 返回字符串, 可用于异步执行. Length = 1121 - 96 + char(10) + int(1) * 3 + int(2) * 10 + int(3) * 17 + int(8) * 19  + float * 2
+     * min: 1280
      * recommend: 1280
      *
      * @param sql_str           保存返回的 SQL 字符串
@@ -516,13 +528,13 @@ methodmap NRPlayerFunc __nullable__
      */
     public void insNewRoundData_sqlStr(char[] sql_str, int max_length, const int client, const float time, const char[] reason) {
         FormatEx(sql_str, max_length
-            , "INSERT INTO round_data SET round_id=%d, reason='%s', engine_time=%f, steam_id=%d, spawn_time=%f, \
-taken_cnt_pills=%d, taken_cnt_gene_therapy=%d, effect_cnt_gene_therapy=%d, \
-share_cnt_bandages=%d, share_cnt_first_aid=%d, share_cnt_pills=%d, share_cnt_gene_therapy=%d, receive_cnt_bandages=%d, receive_cnt_first_aid=%d, receive_cnt_pills=%d, receive_cnt_gene_therapy=%d, \
-kill_cnt_total=%d, kill_cnt_head=%d, kill_cnt_shambler=%d, kill_cnt_runner=%d, kill_cnt_kid=%d, kill_cnt_turned=%d, kill_cnt_player=%d, kill_cnt_melee=%d, kill_cnt_firearm=%d, kill_cnt_explode=%d, kill_cnt_flame=%d, \
-inflict_cnt_player=%d, \
-inflict_dmg_total=%d, inflict_dmg_shambler=%d, inflict_dmg_runner=%d, inflict_dmg_kid=%d, inflict_dmg_turned=%d, inflict_dmg_player=%d, inflict_dmg_melee=%d, inflict_dmg_firearm=%d, inflict_dmg_explode=%d, inflict_dmg_flame=%d, \
-hurt_cnt_total=%d, hurt_cnt_bleed=%d, hurt_cnt_shambler=%d, hurt_cnt_runner=%d, hurt_cnt_kid=%d, hurt_cnt_turned=%d, hurt_cnt_player=%d, \
+            , "INSERT INTO round_data SET round_id=%d, reason='%s', engine_time=%f, steam_id=%d, spawn_time=%f,\
+taken_cnt_pills=%d, taken_cnt_gene_therapy=%d, effect_cnt_gene_therapy=%d,\
+share_cnt_bandages=%d, share_cnt_first_aid=%d, share_cnt_pills=%d, share_cnt_gene_therapy=%d, receive_cnt_bandages=%d, receive_cnt_first_aid=%d, receive_cnt_pills=%d, receive_cnt_gene_therapy=%d,\
+kill_cnt_total=%d, kill_cnt_head=%d, kill_cnt_shambler=%d, kill_cnt_runner=%d, kill_cnt_kid=%d, kill_cnt_turned=%d, kill_cnt_player=%d, kill_cnt_melee=%d, kill_cnt_firearm=%d, kill_cnt_explode=%d, kill_cnt_flame=%d,\
+inflict_cnt_player=%d,\
+inflict_dmg_total=%d, inflict_dmg_shambler=%d, inflict_dmg_runner=%d, inflict_dmg_kid=%d, inflict_dmg_turned=%d, inflict_dmg_player=%d, inflict_dmg_melee=%d, inflict_dmg_firearm=%d, inflict_dmg_explode=%d, inflict_dmg_flame=%d,\
+hurt_cnt_total=%d, hurt_cnt_bleed=%d, hurt_cnt_shambler=%d, hurt_cnt_runner=%d, hurt_cnt_kid=%d, hurt_cnt_turned=%d, hurt_cnt_player=%d,\
 hurt_dmg_total=%d, hurt_dmg_bleed=%d, hurt_dmg_shambler=%d, hurt_dmg_runner=%d, hurt_dmg_kid=%d, hurt_dmg_turned=%d, hurt_dmg_player=%d"
             , nr_round.round_id,                            reason,                                         time
             , nr_player_data[client].steam_id,              nr_player_data[client].spawn_time
@@ -546,25 +558,25 @@ hurt_dmg_total=%d, hurt_dmg_bleed=%d, hurt_dmg_shambler=%d, hurt_dmg_runner=%d, 
     /**
      * 撤离、死亡、离开游戏、回合重启时, 累加玩家统计数据
      * 仅在离开时累加游戏时常
-     * 返回字符串, 可用于异步执行. Length = 643 - 34 + int(1) * 4 + int(3) * 11 + int(5) * 1 + int(10) * 1
+     * 返回字符串, 可用于异步执行. Length = 640 - 34 - 3 + int(1) * 4 + int(3) * 11 + int(5) * 1 + int(10) * 1
      * min: 661
      * recommend: 700
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
      * @param client            玩家的 client index
-     * @param game_duration     玩家在服务器内游玩时长(秒). 仅在离开游戏时 != 0
+     * @param play_time         玩家在服务器内游玩时长(秒). 仅在离开游戏时 != 0
      * @param extracted         撤离次数
      *
      * @return                  No
      */
-    public void updPlayerStats_sqlStr(char[] sql_str, int max_length, const int client, const int game_duration=0, const int extracted=0) {
+    public void updPlayerStats_sqlStr(char[] sql_str, int max_length, const int client, const int play_time=0, const int extracted=0) {
         FormatEx(sql_str, max_length
-            , "UPDATE player_stats SET play_time=play_time+%d, extracted_cnt_total=extracted_cnt_total+%d, \
-kill_cnt_total=kill_cnt_total+%d, kill_cnt_head=kill_cnt_head+%d, kill_cnt_shambler=kill_cnt_shambler+%d, kill_cnt_runner=kill_cnt_runner+%d, kill_cnt_kid=kill_cnt_kid+%d, kill_cnt_turned=kill_cnt_turned+%d, \
-kill_cnt_player=kill_cnt_player+%d, kill_cnt_melee=kill_cnt_melee+%d, kill_cnt_firearm=kill_cnt_firearm+%d, kill_cnt_explode=kill_cnt_explode+%d, kill_cnt_flame=kill_cnt_flame+%d, \
+            , "UPDATE player_stats SET play_time=play_time+%d, extracted_cnt_total=extracted_cnt_total+%d,\
+kill_cnt_total=kill_cnt_total+%d, kill_cnt_head=kill_cnt_head+%d, kill_cnt_shambler=kill_cnt_shambler+%d, kill_cnt_runner=kill_cnt_runner+%d, kill_cnt_kid=kill_cnt_kid+%d, kill_cnt_turned=kill_cnt_turned+%d,\
+kill_cnt_player=kill_cnt_player+%d, kill_cnt_melee=kill_cnt_melee+%d, kill_cnt_firearm=kill_cnt_firearm+%d, kill_cnt_explode=kill_cnt_explode+%d, kill_cnt_flame=kill_cnt_flame+%d,\
 taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therapy+%d, effect_cnt_gene_therapy=effect_cnt_gene_therapy+%d WHERE steam_id=%d"
-            , game_duration,                                    extracted
+            , play_time,                                        extracted
             , nr_player_data[client].kill_cnt_total,            nr_player_data[client].kill_cnt_headSplit,          nr_player_data[client].kill_cnt_shambler,           nr_player_data[client].kill_cnt_runner
             , nr_player_data[client].kill_cnt_kid,              nr_player_data[client].kill_cnt_turned,             nr_player_data[client].kill_cnt_player,             nr_player_data[client].kill_cnt_melee
             , nr_player_data[client].kill_cnt_firearm,          nr_player_data[client].kill_cnt_explode,            nr_player_data[client].kill_cnt_flame
@@ -589,15 +601,19 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
     }
 }
 
-
-void LoadHook_Player()
+void LoadConVar_Player()
 {
     ConVar convar;
     (convar = FindConVar("sv_friendly_fire_factor")).AddChangeHook(OnConVarChange_Player);
     private_cv_ff_factor = convar.FloatValue;
     (convar = FindConVar("sv_bleedout_damage")).AddChangeHook(OnConVarChange_Player);
     private_cv_bleedout_dmg = convar.FloatValue;
+    (convar = CreateConVar("sm_nr_player_play_time_interval",   "60.0",             "更新玩家游玩时长最短间隔(秒) | 建议为 sm_nr_global_timer_interval 的整数倍")).AddChangeHook(OnConVarChange_Player);
+    private_cv_player_play_time_interval = convar.FloatValue;
+}
 
+void LoadHook_Player()
+{
     HookEvent("player_spawn",               On_player_spawn,                        EventHookMode_Post);
 
     HookEvent("npc_killed",                 On_npc_killed,                          EventHookMode_Post);    // 无论何种方式击杀都会触发
@@ -616,10 +632,10 @@ void LoadHook_Player()
 
 void OnConVarChange_Player(ConVar convar, char[] old_value, char[] new_value)
 {
-    if ( convar == INVALID_HANDLE )
+    if( convar == INVALID_HANDLE )
         return;
     char convar_name[32];
-    convar.GetName(convar_name, 32);
+    convar.GetName(convar_name, sizeof(convar_name));
 
     if( strcmp(convar_name, "sv_friendly_fire_factor") == 0 ) {
         private_cv_ff_factor = convar.FloatValue;
@@ -627,11 +643,14 @@ void OnConVarChange_Player(ConVar convar, char[] old_value, char[] new_value)
     else if( strcmp(convar_name, "sv_bleedout_damage") == 0 ) {
         private_cv_bleedout_dmg = convar.FloatValue;
     }
+    else if( strcmp(convar_name, "sm_nr_player_play_time_interval") == 0 ) {
+        private_cv_player_play_time_interval = convar.FloatValue;
+    }
 }
 
 stock bool IsValidClient(int client)
 {
-    return 0 < client <= MaxClients && IsClientInGame(client);
+    return client <= MaxClients && client > 0 && IsClientInGame(client);
 }
 
 

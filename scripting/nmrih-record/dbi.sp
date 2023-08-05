@@ -11,8 +11,6 @@
 #define         MAX_SQL_LEN                     2048
 
 Database        private_dbi_db;                 // ! 使用异步操作时注意线程安全问题
-Handle          private_dbi_timer_keep_alive;
-
 
 char            cv_dbi_conf_name[32];
 bool            cv_dbi_keep_alive;
@@ -25,13 +23,16 @@ methodmap NRDbi __nullable__
     }
 
     property Database db {
-        public get()                            { return view_as<Database>(private_dbi_db); }
+        public get()                            { return private_dbi_db; }
         public set(Database value)              { private_dbi_db = value; }
     }
 
-    property Handle timer_keep_alive {
-        public get()                            { return view_as<Handle>(private_dbi_timer_keep_alive); }
-        public set(Handle value)                { private_dbi_timer_keep_alive = value; }
+    property bool keep_alive {
+        public get()                            { return cv_dbi_keep_alive; }
+    }
+
+    property float keep_alive_interval {
+        public get()                            { return cv_dbi_keep_alive_interval; }
     }
 
     /**
@@ -156,24 +157,32 @@ methodmap NRDbi __nullable__
 NRDbi nr_dbi;
 
 
-void CB_connectAsyncDatabase(Database db_new, const char[] error, any data) {
-    if( db_new == null || db_new == INVALID_HANDLE ) {
+void CB_connectAsyncDatabase(Database db_new, const char[] error, any data)
+{
+    if( db_new == null || db_new == INVALID_HANDLE )
+    {
         LogError(PREFIX_DBI..."CB_connectAsyncDatabase failure! | Error: %s", error);
     }
-    else {
+    else
+    {
         nr_dbi.db = db_new;
         nr_dbi.setCharset(nr_dbi.db);
     }
 }
 
-void CB_asyncExecStrSQL(Database db, DBResultSet results, const char[] error, DataPack data) {
-    if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' ) {
-        if( data != INVALID_HANDLE ) {
+void CB_asyncExecStrSQL(Database db, DBResultSet results, const char[] error, DataPack data)
+{
+    if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
+    {
+        if( data != INVALID_HANDLE )
+        {
             delete data;
         }
     }
-    else {
-        if( data != INVALID_HANDLE ) {
+    else
+    {
+        if( data != INVALID_HANDLE )
+        {
             data.Reset();
             int sql_len = data.ReadCell();
             char[] sql_str = new char[sql_len];
@@ -182,64 +191,54 @@ void CB_asyncExecStrSQL(Database db, DBResultSet results, const char[] error, Da
             LogError(PREFIX_DBI..."CB_asyncExecStrSQL | db:%d | result:%d | Error: %s | SQL: %s |", db != INVALID_HANDLE, results != INVALID_HANDLE, error, sql_str);
             delete data;
         }
-        else {
+        else
+        {
             LogError(PREFIX_DBI..."CB_asyncExecStrSQL | db:%d | result:%d | Error: %s | data is INVALID_HANDLE |",  db != INVALID_HANDLE, results != INVALID_HANDLE, error);
         }
     }
 }
 
-Action Timer_Dbi_KeepAlive(Handle timer, any data) {
-    if( nr_dbi.db == null || nr_dbi.db == INVALID_HANDLE) {
-        nr_dbi.connectAsyncDatabase(cv_dbi_conf_name, cv_dbi_keep_alive);
-    }
-    else {
-        nr_dbi.asyncExecStrSQL("SELECT 1", 10, DBPrio_Low);
-    }
-    return Plugin_Continue;
-}
 
-
-public void LoadDBIConVar() {
+public void LoadConVar_DBI()
+{
     ConVar convar;
     (convar = CreateConVar("sm_nr_dbi_config",              "nmrih_record", "Database Config Name of database keyvalue stored in sourcemod/configs/databases.cfg")).AddChangeHook(OnDbiConVarChange);
     convar.GetString(cv_dbi_conf_name, MAX_DATABSE_NAME_LEN);
     (convar = CreateConVar("sm_nr_dbi_keep_alive",          "1",            "是否保持长连接(链接长时间未使用可能断开连接)")).AddChangeHook(OnDbiConVarChange);
     cv_dbi_keep_alive = convar.BoolValue;
-    (convar = CreateConVar("sm_nr_dbi_keep_alive_interval", "300",          "保持长连接检查间隔(秒)")).AddChangeHook(OnDbiConVarChange);
+    (convar = CreateConVar("sm_nr_dbi_keep_alive_interval", "900.0",        "保持长连接最短检查间隔(秒) | 建议为 sm_nr_global_timer_interval 的整数倍")).AddChangeHook(OnDbiConVarChange);
     cv_dbi_keep_alive_interval = convar.FloatValue;
+}
 
-    if( cv_dbi_keep_alive ) {
-        nr_dbi.timer_keep_alive = CreateTimer(cv_dbi_keep_alive_interval, Timer_Dbi_KeepAlive, _, TIMER_REPEAT);
+void OnDbiConVarChange(ConVar convar, char[] old_value, char[] new_value)
+{
+    if( convar == INVALID_HANDLE )
+        return ;
+    char convar_name[32];
+    convar.GetName(convar_name, sizeof(convar_name));
+
+    if( strcmp(convar_name, "sm_nr_dbi_config") == 0 )
+    {
+        strcopy(cv_dbi_conf_name, MAX_DATABSE_NAME_LEN, new_value);
+    }
+    else if( strcmp(convar_name, "sm_nr_dbi_keep_alive") == 0 )
+    {
+        cv_dbi_keep_alive = convar.BoolValue;
+    }
+    else if( strcmp(convar_name, "sm_nr_dbi_keep_alive_interval") == 0 )
+    {
+        cv_dbi_keep_alive_interval = convar.FloatValue;
     }
 }
 
-void OnDbiConVarChange(ConVar convar, char[] old_value, char[] new_value) {
-    if( convar == INVALID_HANDLE )
-        return ;
-    char convar_name[64];
-    convar.GetName(convar_name, sizeof(convar_name));
-
-    if( strcmp(convar_name, "sm_nr_dbi_config") == 0 ) {
-        strcopy(cv_dbi_conf_name, MAX_DATABSE_NAME_LEN, new_value);
+void GloabalTimer_Dbi()
+{
+    if( nr_dbi.db == null || nr_dbi.db == INVALID_HANDLE)
+    {
+        nr_dbi.connectAsyncDatabase(cv_dbi_conf_name, cv_dbi_keep_alive);
     }
-    else if( strcmp(convar_name, "sm_nr_dbi_keep_alive") == 0 ) {
-        cv_dbi_keep_alive = convar.BoolValue;
-        if( cv_dbi_keep_alive ) {
-            if( nr_dbi.timer_keep_alive == INVALID_HANDLE ) {
-                nr_dbi.timer_keep_alive = CreateTimer(cv_dbi_keep_alive_interval, Timer_Dbi_KeepAlive, _, TIMER_REPEAT);
-            }
-        }
-        else if( nr_dbi.timer_keep_alive != INVALID_HANDLE ) {
-            delete nr_dbi.timer_keep_alive;
-        }
-    }
-    else if( strcmp(convar_name, "sm_nr_dbi_keep_alive_interval") == 0 ) {
-        cv_dbi_keep_alive_interval = convar.FloatValue;
-        if( cv_dbi_keep_alive ) {
-            if( nr_dbi.timer_keep_alive != INVALID_HANDLE ) {
-                delete nr_dbi.timer_keep_alive;
-            }
-            nr_dbi.timer_keep_alive = CreateTimer(cv_dbi_keep_alive_interval, Timer_Dbi_KeepAlive, _, TIMER_REPEAT);
-        }
+    else
+    {
+        nr_dbi.asyncExecStrSQL("SELECT 1", 10, DBPrio_Low);
     }
 }

@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS map_info (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    , INDEX map_info_1 ( map_name )
+    -- , INDEX map_info_1 ( map_name )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS round_info (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    , INDEX round_info_1 ( map_id )
+    -- , INDEX round_info_1 ( map_id )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -126,9 +126,9 @@ CREATE TABLE IF NOT EXISTS round_data (
 
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY ( id )
-    , INDEX round_data_1 ( round_id )
+    -- , INDEX round_data_1 ( round_id )
     -- , INDEX round_data_2 ( steam_id )
-    , INDEX round_data_3(reason)
+    -- , INDEX round_data_3(reason)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -170,41 +170,10 @@ ENGINE = INNODB ;
 -- 新增条件: 玩家成功授权, 且数据库中没有这名玩家的 steam_id + 名字
 -- DROP TABLE IF EXISTS player_name;
 CREATE TABLE IF NOT EXISTS player_name (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-
     `steam_id`                  INT                 NOT NULL     COMMENT '玩家 STEAM ID',
     `name`                      VARCHAR ( 128 )     NOT NULL     COMMENT '玩家名称',
 
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
-    -- , INDEX player_name_1 ( steam_id, `name` )
-)
-DEFAULT CHARSET = utf8mb4
-ENGINE = INNODB ;
--- ----------------------------------------------------------------------------------------------------------------
-
--- ----------------------------------------------------------------------------------------------------------------
--- player_hurt
--- 只有新增, 没有更新
--- 新增条件: 玩家被攻击
--- DROP TABLE IF EXISTS player_hurt;
-CREATE TABLE IF NOT EXISTS player_hurt (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-    `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
-
-    `engine_time`               DOUBLE              NOT NULL    COMMENT 'EngineTime',
-
-    `victim_id`                 INT                 NOT NULL    COMMENT '受害者的 STEAM ID',
-    `attacker_id`               INT                 NOT NULL    COMMENT '攻击者的 ID | 玩家时为 STEAM ID, 其他为实体 index (不超过2049)',
-    `weapon_name`               VARCHAR ( 32 )                 COMMENT '武器名称 (常规: player、***zombie | 特殊值: _bleed, _infected, _self)',
-    `damage`                    SMALLINT UNSIGNED   DEFAULT 0   COMMENT '实际造成的伤害',
-    `damage_type`               INT                 DEFAULT 0   COMMENT '造成的伤害类型',
-
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
-    -- , INDEX player_hurt_1 ( round_id )
-    -- , INDEX player_hurt_2 ( victim_id )
-    -- , INDEX player_hurt_3 ( attacker_id )
+    UNIQUE KEY `player_name_1` (`steam_id`, `name`)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -265,110 +234,10 @@ CREATE TABLE IF NOT EXISTS player_stats (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    , INDEX player_stats_1 ( steam_id )
+    , UNIQUE KEY `player_stats_1` (`steam_id`)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
 -- ----------------------------------------------------------------------------------------------------------------
-
-
-
--- * manager
--- ----------------------------------------------------------------------------------------------------------------
--- player_put_in
--- 新增条件: 玩家进入服务器. 用于发生纠纷时获取信息
--- DROP TABLE IF EXISTS player_put_in;
-CREATE TABLE IF NOT EXISTS player_put_in (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-
-    `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
-    `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
-
-    `ip`                        VARCHAR ( 32 )                  COMMENT '',
-    `country`                   VARCHAR ( 32 )                  COMMENT '',
-    `continent`                 VARCHAR ( 32 )                  COMMENT '',
-    `region`                    VARCHAR ( 32 )                  COMMENT '',
-    `city`                      VARCHAR ( 32 )                  COMMENT '',
-
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
---     , INDEX player_put_in_1 ( map_id, round_id )
---     , INDEX player_put_in_2 ( steam_id )
-)
-DEFAULT CHARSET = utf8mb4
-ENGINE = INNODB ;
--- ----------------------------------------------------------------------------------------------------------------
-
-
--- ----------------------------------------------------------------------------------------------------------------
--- player_say
--- 新增条件: 玩家发言
--- DROP TABLE IF EXISTS player_say;
-CREATE TABLE IF NOT EXISTS player_say (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-    `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
-
-    `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
-    `text`                      VARCHAR ( 256 )                 COMMENT '',
-
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
---     , INDEX player_say ( steam_id )
-)
-DEFAULT CHARSET = utf8mb4
-ENGINE = INNODB ;
--- ----------------------------------------------------------------------------------------------------------------
-
-
--- ----------------------------------------------------------------------------------------------------------------
--- vote_info
--- 新增条件:
---     调用命令 callvote 且参数 > 1
---     玩家触发投票选择
--- DROP TABLE IF EXISTS vote_info;
-CREATE TABLE IF NOT EXISTS vote_info (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-    `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
-
-    `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
-    `vote_info`                 VARCHAR ( 32 )                  COMMENT '发起的投票信息',
-    `vote_option`               TINYINT                         COMMENT '玩家做出的选项',
-
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
---     , INDEX vote_info ( steam_id )
-)
-DEFAULT CHARSET = utf8mb4
-ENGINE = INNODB ;
--- ----------------------------------------------------------------------------------------------------------------
-
-
--- ----------------------------------------------------------------------------------------------------------------
--- player_disconnect
--- 新增条件:
---     玩家离开服务器
--- DROP TABLE IF EXISTS player_disconnect;
-CREATE TABLE IF NOT EXISTS player_disconnect (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-    `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
-
-    `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
-    `reason`                    VARCHAR ( 128 )                 COMMENT '离开原因',
-    `networkid`                 VARCHAR ( 32 )                  COMMENT 'ip地址',
-    `play_time`                 SMALLINT UNSIGNED   DEFAULT 0   COMMENT '游玩时长',
-
-    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    PRIMARY KEY ( id )
---     , INDEX vote_info ( steam_id )
-)
-DEFAULT CHARSET = utf8mb4
-ENGINE = INNODB ;
--- ----------------------------------------------------------------------------------------------------------------
-
-
-
-
-
-
 
 
