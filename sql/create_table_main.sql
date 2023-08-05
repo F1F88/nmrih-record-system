@@ -173,7 +173,7 @@ CREATE TABLE IF NOT EXISTS player_name (
     `steam_id`                  INT                 NOT NULL     COMMENT '玩家 STEAM ID',
     `name`                      VARCHAR ( 128 )     NOT NULL     COMMENT '玩家名称',
 
-    UNIQUE KEY `player_name_1` (`steam_id`, `name`)
+    PRIMARY KEY `player_name_1` (`steam_id`)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;

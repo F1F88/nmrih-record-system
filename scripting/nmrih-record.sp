@@ -375,24 +375,38 @@ public void OnClientPutInServer(int client)
     DataPack data = new DataPack();                                 // 记录玩家来源、玩家名字 | 输出玩家来源
     CreateDataTimer(nr_printer.delay_show_play_time, Timer_OnClientPutInServer, data, TIMER_DATA_HNDL_CLOSE);
 
-    char name[MAX_NAME_LENGTH];
-    GetClientName(client,   name,           MAX_NAME_LENGTH);
     data.WriteCell(client);
-    data.WriteString(name);
 
 #if defined INCLUDE_MANAGER
-    char ip[32],            country[32],    continent[32],          region[32],     city[32];
+    char name[MAX_NAME_LENGTH],             name_escape[MAX_NAME_LENGTH];
+    char ip[32],                            ip_escape[32];
+    char country[32],                       country_escape[32];
+    char continent[32],                     continent_escape[32];
+    char region[32],                        region_escape[32];
+    char city[32],                          city_escape[32];
+
+    GetClientName(client,   name,           MAX_NAME_LENGTH);
     GetClientIP(client,     ip,             sizeof(ip));
     GeoipCountryEx(ip,      country,        sizeof(country),        LANG_SERVER);
     GeoipContinent(ip,      continent,      sizeof(continent),      LANG_SERVER);
     GeoipRegion(ip,         region,         sizeof(region),         LANG_SERVER);
     GeoipCity(ip,           city,           sizeof(city),           LANG_SERVER);
+
+    nr_dbi.db.Escape(       name,           name_escape,            MAX_NAME_LENGTH);
+    nr_dbi.db.Escape(       ip,             ip_escape,              sizeof(ip_escape));
+    nr_dbi.db.Escape(       country,        country_escape,         sizeof(country_escape));
+    nr_dbi.db.Escape(       continent,      continent_escape,       sizeof(continent_escape));
+    nr_dbi.db.Escape(       region,         region_escape,          sizeof(region_escape));
+    nr_dbi.db.Escape(       city,           city_escape,            sizeof(city_escape));
+
+    data.WriteCell(GetTime());
+    data.WriteCell(nr_player_data[client].steam_id);
+    data.WriteString(name);
     data.WriteString(ip);
     data.WriteString(country);
     data.WriteString(continent);
     data.WriteString(region);
     data.WriteString(city);
-    data.WriteCell(GetTime());
 #endif
 }
 
@@ -400,44 +414,31 @@ Action Timer_OnClientPutInServer(Handle timer, DataPack data)
 {
     data.Reset();
     int client = data.ReadCell();
-    char name[MAX_NAME_LENGTH],             name_escape[MAX_NAME_LENGTH];
-    data.ReadString(        name,           MAX_NAME_LENGTH);
-    nr_dbi.db.Escape(       name,           name_escape,            MAX_NAME_LENGTH);
-
-    char sql_str[512];
-    if( nr_player_data[client].steam_id != 0 )                      // 记录玩家steam_id + 名字
-    {
-        nr_player_func.insNewPlayerName_sqlStr(sql_str, sizeof(sql_str), nr_player_data[client].steam_id, name_escape);
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
-    }
 
 #if defined INCLUDE_MANAGER
-    char ip[32],                            ip_escape[32];
-    char country[32],                       country_escape[32];
-    char continent[32],                     continent_escape[32];
-    char region[32],                        region_escape[32];
-    char city[32],                          city_escape[32];
+    int create_time = data.ReadCell();
+    int steam_id = data.ReadCell();
+    if( IsClientInGame(client) )
+    {
+        steam_id = GetSteamAccountID(client);
+    }
+
+    char sql_str[512],      name[MAX_NAME_LENGTH];
+    char ip[32],            country[32],    continent[32],          region[32],     city[32];
+    data.ReadString(        name,           MAX_NAME_LENGTH);
     data.ReadString(        ip,             sizeof(ip));
     data.ReadString(        country,        sizeof(country));
     data.ReadString(        continent,      sizeof(continent));
     data.ReadString(        region,         sizeof(region));
     data.ReadString(        city,           sizeof(city));
 
-    nr_dbi.db.Escape(       ip,             ip_escape,              sizeof(ip_escape));
-    nr_dbi.db.Escape(       country,        country_escape,         sizeof(country_escape));
-    nr_dbi.db.Escape(       continent,      continent_escape,       sizeof(continent_escape));
-    nr_dbi.db.Escape(       region,         region_escape,          sizeof(region_escape));
-    nr_dbi.db.Escape(       city,           city_escape,            sizeof(city_escape));
-
-    int create_time = data.ReadCell();
-
-    nr_manager.insNewPlayerPutIn_sqlStr(sql_str, sizeof(sql_str), nr_player_data[client].steam_id, name_escape, ip_escape, country_escape, continent_escape, region_escape, city_escape, create_time);
+    nr_manager.insNewPlayerPutIn_sqlStr(sql_str, sizeof(sql_str), steam_id, name, ip, country, continent, region, city, create_time);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);   // 记录玩家来源
 #endif
 
-    if( IsClientInGame(client) && nr_printer.show_play_time )
+    if( IsClientInGame(client) && nr_player_data[client].steam_id != 0 && nr_printer.show_play_time )
     {
-        nr_printer.PrintPlayTime(client, nr_player_data[client].steam_id);
+        nr_printer.PrintPlayTime(client);
     }
     return Plugin_Stop;
 }
@@ -447,8 +448,16 @@ public void OnClientAuthorized(int client, const char[] auth)
 {
     nr_player_data[client].steam_id = GetSteamAccountID(client);
 
-    char sql_str[64];                                               // 记录玩家 统计信息 (可能比 round start 更早, 但此处不涉及 round_id)
+    char sql_str[256];                                              // 记录玩家 统计信息 (可能比 round start 更早, 但此处不涉及 round_id)
+    char name[MAX_NAME_LENGTH],             name_escape[MAX_NAME_LENGTH];
+
     nr_player_func.insNewPlayerStats_sqlStr(sql_str, sizeof(sql_str), client);
+    nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
+
+    GetClientName(client,   name,           MAX_NAME_LENGTH);       // 记录玩家 steam_id 与名字的映射 (修改名字后会进行更新)
+    nr_dbi.db.Escape(       name,           name_escape,            MAX_NAME_LENGTH);
+
+    nr_player_func.insNewPlayerName_sqlStr(sql_str, sizeof(sql_str), nr_player_data[client].steam_id, name_escape);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
 }
 
@@ -777,35 +786,36 @@ void On_player_extracted(Event event, const char[] name, bool dontBroadcast)
 {
     int client = event.GetInt("player_id");
 
-    if( nr_player_data[client].steam_id != 0 && nr_player_data[client].aready_submit_data == false )
+    if( nr_player_data[client].steam_id != 0 )
     {
-        float game_time = GetEngineTime();
-        float take_time = game_time - nr_round.begin_time;
-        nr_player_data[client].aready_submit_data = true;
-
-        char sql_str[1280];
-        // 记录回合玩家数据
-        nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "extracted");
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
-
-        // 累加统计
-        nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, 0, 1);
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
-
-        // 输出撤离信息
-        // [提示] {name} 撤离成功! 用时: {minute}:{seconds} 击杀: {int}
-        if( nr_printer.show_player_extraction )
+        if( nr_player_data[client].aready_submit_data == false )
         {
-            nr_printer.PrintPlayerExtraction(client, take_time);
-        }
+            float game_time = GetEngineTime();
+            float take_time = game_time - nr_round.begin_time;
+            nr_player_data[client].aready_submit_data = true;
 
-        nr_player_data[client].cleanup_stats();
+            char sql_str[1280];
+            // 记录回合玩家数据
+            nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "extracted");
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
+
+            // 累加统计
+            nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, 0, 1);
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
+
+            // 输出撤离信息
+            // [提示] {name} 撤离成功! 用时: {minute}:{seconds} 击杀: {int}
+            if( nr_printer.show_player_extraction )
+            {
+                nr_printer.PrintPlayerExtraction(client, take_time);
+            }
+
+            nr_player_data[client].cleanup_stats();
+        }
     }
-    else
+    else    // [提示] {name} 的 steam id 为 0, 无法记录
     {
-        // [提示] {name} 的 steam id 为 0, 无法记录
-        LogMessage("On_player_extracted | client: %d | name: %N | steam: %d | aready: %d |", client, client, nr_player_data[client].steam_id, nr_player_data[client].aready_submit_data);
-        return ;
+        LogMessage("On_player_extracted | client: %d | name: %N | steam: %d | aready: %d |", client, client, nr_player_data[client].steam_id, nr_player_data[client].aready_submit_data) ;
     }
 }
 
@@ -821,10 +831,9 @@ void On_watermelon_rescue(Event event, const char[] name, bool dontBroadcast)
         nr_player_func.insNewWatermelonRescue_sqlStr(sql_str, sizeof(sql_str), client);
         nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
     }
-    else
+    else    // [提示] {name} 的 steam id 为 0, 无法记录
     {
-        LogMessage("On_watermelon_rescue | client: %d | name: %N | steam: %d |", client, client, nr_player_data[client].steam_id);
-        return ;
+        LogMessage("On_watermelon_rescue | client: %d | name: %N | steam: %d | aready: %d |", client, client, nr_player_data[client].steam_id, nr_player_data[client].aready_submit_data) ;
     }
 
     // 输出 西瓜救援成功
@@ -839,30 +848,37 @@ void On_watermelon_rescue(Event event, const char[] name, bool dontBroadcast)
 public void On_player_death(Event event, char[] name, bool dontBroadcast)
 {
     int victim = GetClientOfUserId( event.GetInt("userid") );
-    if( nr_player_data[victim].aready_submit_data == false )
+    if( nr_player_data[victim].steam_id != 0 )
     {
-        float game_time = GetEngineTime();
-        nr_player_data[victim].aready_submit_data = true;
-
-        int npc_type = event.GetInt("npctype");
-        int attacker = GetClientOfUserId( event.GetInt("attacker") );
-
-        // 死于玩家之手
-        if( npc_type == 0 && victim <= MaxClients && victim > 0 && victim != attacker && attacker <= MaxClients && attacker > 0 )
+        if( nr_player_data[victim].aready_submit_data == false )
         {
-            nr_player_data[attacker].kill_cnt_player += 1;
+            float game_time = GetEngineTime();
+            nr_player_data[victim].aready_submit_data = true;
+
+            int npc_type = event.GetInt("npctype");
+            int attacker = GetClientOfUserId( event.GetInt("attacker") );
+
+            // 死于玩家之手
+            if( npc_type == 0 && victim <= MaxClients && victim > 0 && victim != attacker && attacker <= MaxClients && attacker > 0 )
+            {
+                nr_player_data[attacker].kill_cnt_player += 1;
+            }
+
+            char sql_str[1280];
+            // 记录回合玩家数据
+            nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), victim, game_time, "death");
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
+
+            // 累加统计
+            nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), victim, 0, 0);
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
+
+            nr_player_data[victim].cleanup_stats();
         }
-
-        char sql_str[1280];
-        // 记录回合玩家数据
-        nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), victim, game_time, "death");
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
-
-        // 累加统计
-        nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), victim, 0, 0);
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
-
-        nr_player_data[victim].cleanup_stats();
+    }
+    else    // [提示] {name} 的 steam id 为 0, 无法记录
+    {
+        LogMessage("On_player_death | client: %d | name: %N | steam: %d | aready: %d |", victim, victim, nr_player_data[victim].steam_id, nr_player_data[victim].aready_submit_data) ;
     }
 }
 
@@ -870,29 +886,30 @@ public void On_player_death(Event event, char[] name, bool dontBroadcast)
 public void On_player_leave(Event event, char[] name, bool dontBroadcast)
 {
     int client = event.GetInt("index");
-    if( nr_player_data[client].steam_id != 0 && nr_player_data[client].aready_submit_data == false )
+    if( nr_player_data[client].steam_id != 0 )
     {
-        float game_time = GetEngineTime();
-        nr_player_data[client].aready_submit_data = true;
+        if( nr_player_data[client].aready_submit_data == false )
+        {
+            float game_time = GetEngineTime();
+            nr_player_data[client].aready_submit_data = true;
 
-        char sql_str[1280];
+            char sql_str[1280];
 
-        // 记录回合玩家数据
-        nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "leave");
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
+            // 记录回合玩家数据
+            nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "leave");
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
 
-        // 累加统计
-        nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, 0, 0);
-        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
+            // 累加统计
+            nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, 0, 0);
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
 
-        // 全部重置玩家数据
-        nr_player_data[client].cleanup_stats();
+            // 全部重置玩家数据
+            nr_player_data[client].cleanup_stats();
+        }
     }
-    else
+    else    // [提示] {name} 的 steam id 为 0, 无法记录
     {
-        // [提示] {name} 的 steam id 为 0, 无法记录
         LogMessage("On_player_leave | client: %d | name: %N | steam: %d | aready: %d |", client, client, nr_player_data[client].steam_id, nr_player_data[client].aready_submit_data) ;
-        return ;
     }
 }
 
@@ -900,35 +917,41 @@ public void On_player_leave(Event event, char[] name, bool dontBroadcast)
 void On_player_disconnect(Event event, char[] name, bool dontBroadcast)
 {
     int client = GetClientOfUserId( event.GetInt("userid") );
-    int play_time;
-    if( IsClientInGame(client) )
+    if( client <= MaxClients && client > 0 )                        // map 换图时存在 client index = 0 的 bug
     {
-        play_time = RoundToCeil( GetClientTime(client) );
-    }
-    else if( FloatCompare(nr_player_data[client].play_time, 0.0) >= 0 )
-    {
-        // play_time = GetTime() - nr_player_data[client].put_in_time;
-        play_time = RoundToCeil( nr_player_data[client].play_time );
-        nr_player_data[client].put_in_time = 0;
-        nr_player_data[client].play_time = 0.0;
-    }
-    else
-    {
-        return ;
-    }
+        int play_time;
+        if( IsClientInGame(client) )
+        {
+            play_time = RoundToCeil( GetClientTime(client) );
+        }
+        else if( FloatCompare(nr_player_data[client].play_time, 0.0) >= 0 )
+        {
+            // play_time = GetTime() - nr_player_data[client].put_in_time;
+            play_time = RoundToCeil( nr_player_data[client].play_time );
+            nr_player_data[client].put_in_time = 0;
+            nr_player_data[client].play_time = 0.0;
+        }
+        else
+        {
+            return ;
+        }
 
-    char sql_str[700];
-    // 累加统计
-    nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, play_time, 0);
-    nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
+        char sql_str[700];
+        if( nr_player_data[client].steam_id != 0 )
+        {
+            // 累加统计
+            nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, play_time, 0);
+            nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
+        }
 
 #if defined INCLUDE_MANAGER
-    char reason[MAX_NAME_LENGTH],                   networkid[32];
-    event.GetString("reason",       reason,         sizeof(reason),         NULL_STRING);
-    event.GetString("networkid",    networkid,      sizeof(networkid),      NULL_STRING);
+        char reason[MAX_NAME_LENGTH],                   networkid[32];
+        event.GetString("reason",       reason,         sizeof(reason),         NULL_STRING);
+        event.GetString("networkid",    networkid,      sizeof(networkid),      NULL_STRING);
 
-    nr_manager.insNewPlayerDisconnect_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), client, reason, networkid, play_time);
-    nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
+        nr_manager.insNewPlayerDisconnect_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), client, reason, networkid, play_time);
+        nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 #endif
+    }
 }
 

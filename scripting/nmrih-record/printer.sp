@@ -124,12 +124,12 @@ methodmap NRPrinter __nullable__
         public get()                            { return cv_printer_show_watermelon_rescue; }
     }
 
-    public void PrintPlayTime(int client, int steam_id) {
+    public void PrintPlayTime(int client) {
         char sql_str[350];
         FormatEx(sql_str, sizeof(sql_str)
             // 52 - 2 + INT
             , "SELECT play_time FROM player_stats WHERE steam_id=%d"
-            , steam_id
+            , nr_player_data[client].steam_id
             // 310 - 6 + INT * 3    // Custom Only
             // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id"
             // , steam_id, steam_id, steam_id
