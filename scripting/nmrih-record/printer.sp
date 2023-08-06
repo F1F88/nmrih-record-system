@@ -125,21 +125,24 @@ methodmap NRPrinter __nullable__
     }
 
     public void PrintPlayTime(int client) {
-        char sql_str[350];
+        char sql_str[64];
         FormatEx(sql_str, sizeof(sql_str)
             // 52 - 2 + INT
-            , "SELECT play_time FROM player_stats WHERE steam_id=%d"
-            , nr_player_data[client].steam_id
+            , "SELECT play_time FROM player_stats WHERE steam_id=%d", nr_player_data[client].steam_id
             // 310 - 6 + INT * 3    // Custom Only
-            // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id"
-            // , steam_id, steam_id, steam_id
+            // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id", steam_id, steam_id, steam_id
         );
         nr_dbi.db.Query(CB_asyncGetPlayTime, sql_str, client, DBPrio_Normal); // 特定回调
     }
 
+    /**
+     * 提前查询已记录的玩家撤离数据
+     * 返回字符串, 可用于异步执行. Length = 220 - 4 + MAX_MAP_NAME_LEN + MAX_MD5_LEN
+     * min: 300
+     * recommend: 300
+     *
+     */
     public void PrintExtractedAvgTime() {
-        // 提前查询已记录的玩家撤离数据
-        // 220 - 4 + MAX_MAP_NAME_LEN + MAX_MD5_LEN     // min: 300             // recommend: 300
         char sql_str[350];
         FormatEx(sql_str, sizeof(sql_str)
             , "SELECT d.engine_time-r.round_begin_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted'"
@@ -154,7 +157,7 @@ methodmap NRPrinter __nullable__
         }
     }
 
-    // PrintObjStart
+    // * PrintObjStart
 
     public void PrintExtractionBegin(const float take_time) {
         int   take_time_minute  = RoundToFloor( take_time / 60.0 );

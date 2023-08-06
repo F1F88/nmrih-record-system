@@ -467,33 +467,24 @@ methodmap NRPlayerFunc __nullable__
 
     /**
      * 玩家首次进入服务器, 为其新增一条统计信息
-    //  * 返回字符串, 可用于异步执行. Length = 119 - 4 + 2 * int = 135
      * 返回字符串, 可用于异步执行. Length = 51 - 2 + int
-     * min: 64
+     * min: 59
      * recommend: 64
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
      * @param client            玩家的 client index
-     * @param name_escape       玩家名称 (需提前转义)
      *
      * @return                  No
      */
     public void insNewPlayerStats_sqlStr(char[] sql_str, int max_length, const int client) {
-        FormatEx(sql_str, max_length
-            // , "INSERT INTO player_stats (steam_id) SELECT %d FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_stats WHERE steam_id=%d)"
-            , "INSERT IGNORE INTO player_stats(steam_id)VALUES(%d)"
-            , nr_player_data[client].steam_id
-        );
+        FormatEx(sql_str, max_length, "INSERT IGNORE INTO player_stats(steam_id) VALUES(%d)", nr_player_data[client].steam_id);
     }
 
     /**
      * 记录新的玩家名字
-    //  * 返回字符串, 可用于异步执行. Length = 147 - 8 + 2 * int + 2 * MAX_NAME_LENGTH
-    //  * min: 415
-    //  * recommend: 384
-     * 返回字符串, 可用于异步执行. Length = 99 - 4 + int + MAX_NAME_LENGTH
-     * min: 169
+     * 返回字符串, 可用于异步执行. Length = 83 - 4 + int + MAX_NAME_LENGTH
+     * min: 217
      * recommend: 256
      *
      * @param sql_str           保存返回的 SQL 字符串
@@ -504,19 +495,17 @@ methodmap NRPlayerFunc __nullable__
      * @return                  No
      */
     public void insNewPlayerName_sqlStr(char[] sql_str, int max_length, const int steam_id, const char[] name_escape) {
-        FormatEx(sql_str, max_length
-            // , "INSERT INTO player_name (steam_id, `name`) SELECT %d, '%s' FROM dual WHERE NOT EXISTS (SELECT 1 FROM player_name WHERE steam_id=%d AND `name`='%s')"
-            , "INSERT INTO player_name (steam_id,name) VALUES (%d,'%s') ON DUPLICATE KEY UPDATE name=VALUES(name);"
-            , steam_id,    name_escape
-        );
+        FormatEx(sql_str, max_length, "INSERT INTO player_name VALUES (%d,'%s') ON DUPLICATE KEY UPDATE name=VALUES(name);", steam_id, name_escape);
     }
 
 
     /**
      * 记录回合数据
-     * 返回字符串, 可用于异步执行. Length = 1121 - 96 + char(10) + int(1) * 3 + int(2) * 10 + int(3) * 17 + int(8) * 19  + float * 2
-     * min: 1280
-     * recommend: 1280
+     * 返回字符串, 可用于异步执行.
+     * [char(10) + int(1) * 3 + int(2) * 10 + int(3) * 17 + int(8) * 19  + float * 2] = 266
+     * Length = 221 - 102 + 266
+     * min: 385
+     * recommend: 512
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
@@ -528,29 +517,21 @@ methodmap NRPlayerFunc __nullable__
      */
     public void insNewRoundData_sqlStr(char[] sql_str, int max_length, const int client, const float time, const char[] reason) {
         FormatEx(sql_str, max_length
-            , "INSERT INTO round_data SET round_id=%d, reason='%s', engine_time=%f, steam_id=%d, spawn_time=%f,\
-taken_cnt_pills=%d, taken_cnt_gene_therapy=%d, effect_cnt_gene_therapy=%d,\
-share_cnt_bandages=%d, share_cnt_first_aid=%d, share_cnt_pills=%d, share_cnt_gene_therapy=%d, receive_cnt_bandages=%d, receive_cnt_first_aid=%d, receive_cnt_pills=%d, receive_cnt_gene_therapy=%d,\
-kill_cnt_total=%d, kill_cnt_head=%d, kill_cnt_shambler=%d, kill_cnt_runner=%d, kill_cnt_kid=%d, kill_cnt_turned=%d, kill_cnt_player=%d, kill_cnt_melee=%d, kill_cnt_firearm=%d, kill_cnt_explode=%d, kill_cnt_flame=%d,\
-inflict_cnt_player=%d,\
-inflict_dmg_total=%d, inflict_dmg_shambler=%d, inflict_dmg_runner=%d, inflict_dmg_kid=%d, inflict_dmg_turned=%d, inflict_dmg_player=%d, inflict_dmg_melee=%d, inflict_dmg_firearm=%d, inflict_dmg_explode=%d, inflict_dmg_flame=%d,\
-hurt_cnt_total=%d, hurt_cnt_bleed=%d, hurt_cnt_shambler=%d, hurt_cnt_runner=%d, hurt_cnt_kid=%d, hurt_cnt_turned=%d, hurt_cnt_player=%d,\
-hurt_dmg_total=%d, hurt_dmg_bleed=%d, hurt_dmg_shambler=%d, hurt_dmg_runner=%d, hurt_dmg_kid=%d, hurt_dmg_turned=%d, hurt_dmg_player=%d"
-            , nr_round.round_id,                            reason,                                         time
-            , nr_player_data[client].steam_id,              nr_player_data[client].spawn_time
-            , nr_player_data[client].taken_cnt_pills,       nr_player_data[client].taken_cnt_gene_therapy,  nr_player_data[client].effect_cnt_gene_therapy
-            , nr_player_data[client].share_cnt_bandages,    nr_player_data[client].share_cnt_first_aid,     nr_player_data[client].share_cnt_pills,     nr_player_data[client].share_cnt_gene_therapy
-            , nr_player_data[client].receive_cnt_bandages,  nr_player_data[client].receive_cnt_first_aid,   nr_player_data[client].receive_cnt_pills,   nr_player_data[client].receive_cnt_gene_therapy
-            , nr_player_data[client].kill_cnt_total,        nr_player_data[client].kill_cnt_headSplit,      nr_player_data[client].kill_cnt_shambler,   nr_player_data[client].kill_cnt_runner
-            , nr_player_data[client].kill_cnt_kid,          nr_player_data[client].kill_cnt_turned,         nr_player_data[client].kill_cnt_player,     nr_player_data[client].kill_cnt_melee
+            , "INSERT INTO round_data VALUES(null,%d,%d,'%s',%f,%f,%d,%d,%d,  %d,%d,%d,%d,%d,%d,%d,%d,  %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,%d,  %d,  %d,%d,%d,%d,%d,%d,%d,%d,%d,%d,  %d,%d,%d,%d,%d,%d,%d,  %d,%d,%d,%d,%d,%d,%d,NOW())"
+            , nr_round.round_id,                            nr_player_data[client].steam_id,                reason,                                         time
+            , nr_player_data[client].spawn_time,            nr_player_data[client].taken_cnt_pills,         nr_player_data[client].taken_cnt_gene_therapy,  nr_player_data[client].effect_cnt_gene_therapy
+            , nr_player_data[client].share_cnt_bandages,    nr_player_data[client].share_cnt_first_aid,     nr_player_data[client].share_cnt_pills,         nr_player_data[client].share_cnt_gene_therapy
+            , nr_player_data[client].receive_cnt_bandages,  nr_player_data[client].receive_cnt_first_aid,   nr_player_data[client].receive_cnt_pills,       nr_player_data[client].receive_cnt_gene_therapy
+            , nr_player_data[client].kill_cnt_total,        nr_player_data[client].kill_cnt_headSplit,      nr_player_data[client].kill_cnt_shambler,       nr_player_data[client].kill_cnt_runner
+            , nr_player_data[client].kill_cnt_kid,          nr_player_data[client].kill_cnt_turned,         nr_player_data[client].kill_cnt_player,         nr_player_data[client].kill_cnt_melee
             , nr_player_data[client].kill_cnt_firearm,      nr_player_data[client].kill_cnt_explode,        nr_player_data[client].kill_cnt_flame
             , nr_player_data[client].inflict_cnt_player
-            , nr_player_data[client].inflict_dmg_total,     nr_player_data[client].inflict_dmg_shambler,    nr_player_data[client].inflict_dmg_runner,  nr_player_data[client].inflict_dmg_kid
+            , nr_player_data[client].inflict_dmg_total,     nr_player_data[client].inflict_dmg_shambler,    nr_player_data[client].inflict_dmg_runner,      nr_player_data[client].inflict_dmg_kid
             , nr_player_data[client].inflict_dmg_turned,    nr_player_data[client].inflict_dmg_player,      nr_player_data[client].inflict_dmg_melee
             , nr_player_data[client].inflict_dmg_firearm,   nr_player_data[client].inflict_dmg_explode,     nr_player_data[client].inflict_dmg_flame
-            , nr_player_data[client].hurt_cnt_total,        nr_player_data[client].hurt_cnt_bleed,          nr_player_data[client].hurt_cnt_shambler,   nr_player_data[client].hurt_cnt_runner
+            , nr_player_data[client].hurt_cnt_total,        nr_player_data[client].hurt_cnt_bleed,          nr_player_data[client].hurt_cnt_shambler,       nr_player_data[client].hurt_cnt_runner
             , nr_player_data[client].hurt_cnt_kid,          nr_player_data[client].hurt_cnt_turned,         nr_player_data[client].hurt_cnt_player
-            , nr_player_data[client].hurt_dmg_total,        nr_player_data[client].hurt_dmg_bleed,          nr_player_data[client].hurt_dmg_shambler,   nr_player_data[client].hurt_dmg_runner
+            , nr_player_data[client].hurt_dmg_total,        nr_player_data[client].hurt_dmg_bleed,          nr_player_data[client].hurt_dmg_shambler,       nr_player_data[client].hurt_dmg_runner
             , nr_player_data[client].hurt_dmg_kid,          nr_player_data[client].hurt_dmg_turned,         nr_player_data[client].hurt_dmg_player
         );
     }
@@ -558,8 +539,8 @@ hurt_dmg_total=%d, hurt_dmg_bleed=%d, hurt_dmg_shambler=%d, hurt_dmg_runner=%d, 
     /**
      * 撤离、死亡、离开游戏、回合重启时, 累加玩家统计数据
      * 仅在离开时累加游戏时常
-     * 返回字符串, 可用于异步执行. Length = 640 - 34 - 3 + int(1) * 4 + int(3) * 11 + int(5) * 1 + int(10) * 1
-     * min: 661
+     * 返回字符串, 可用于异步执行. Length = 648 - 34 - 3 + int(1) * 4 + int(3) * 11 + int(5) * 1 + int(10) * 1
+     * min: 669
      * recommend: 700
      *
      * @param sql_str           保存返回的 SQL 字符串
@@ -575,7 +556,7 @@ hurt_dmg_total=%d, hurt_dmg_bleed=%d, hurt_dmg_shambler=%d, hurt_dmg_runner=%d, 
             , "UPDATE player_stats SET play_time=play_time+%d, extracted_cnt_total=extracted_cnt_total+%d,\
 kill_cnt_total=kill_cnt_total+%d, kill_cnt_head=kill_cnt_head+%d, kill_cnt_shambler=kill_cnt_shambler+%d, kill_cnt_runner=kill_cnt_runner+%d, kill_cnt_kid=kill_cnt_kid+%d, kill_cnt_turned=kill_cnt_turned+%d,\
 kill_cnt_player=kill_cnt_player+%d, kill_cnt_melee=kill_cnt_melee+%d, kill_cnt_firearm=kill_cnt_firearm+%d, kill_cnt_explode=kill_cnt_explode+%d, kill_cnt_flame=kill_cnt_flame+%d,\
-taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therapy+%d, effect_cnt_gene_therapy=effect_cnt_gene_therapy+%d WHERE steam_id=%d"
+taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therapy+%d, effect_cnt_gene_therapy=effect_cnt_gene_therapy+%d WHERE steam_id=%d LIMIT 1"
             , play_time,                                        extracted
             , nr_player_data[client].kill_cnt_total,            nr_player_data[client].kill_cnt_headSplit,          nr_player_data[client].kill_cnt_shambler,           nr_player_data[client].kill_cnt_runner
             , nr_player_data[client].kill_cnt_kid,              nr_player_data[client].kill_cnt_turned,             nr_player_data[client].kill_cnt_player,             nr_player_data[client].kill_cnt_melee
@@ -586,9 +567,9 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
 
     /**
      * 记录西瓜救援事件
-     * 返回字符串, 可用于异步执行. Length = 74 - 6 + 2 * int + float
-     * min: 98
-     * recommend: 100
+     * 返回字符串, 可用于异步执行. Length = 57 - 6 + 2 * int + float
+     * min: 86
+     * recommend: 96
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
@@ -597,7 +578,7 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
      * @return                  No
      */
     public void insNewWatermelonRescue_sqlStr(char[] sql_str, int max_length, const int client) {
-        FormatEx(sql_str, max_length, "INSERT INTO watermelon_rescue SET round_id=%d, engine_time=%f, steam_id=%d", nr_round.round_id, GetEngineTime(), nr_player_data[client].steam_id);
+        FormatEx(sql_str, max_length, "INSERT INTO watermelon_rescue VALUES(NULL,%d,%f,%d,NOW())", nr_round.round_id, GetEngineTime(), nr_player_data[client].steam_id);
     }
 }
 

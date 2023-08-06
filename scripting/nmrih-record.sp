@@ -1,8 +1,6 @@
 // Todo: 在地图、回合信息记录失败时停止记录
 // Todo: 补充撤离时的用时排名
 // Todo  补充使用绷带和医疗包事件及记录字段
-// Todo: 完善 Late 时的加载信息
-// Note: In my tests, I found that StrContains performs well, even slightly better than strcmp. But be careful not to set caseSensitive to false
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -215,7 +213,7 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
     }
 
     float game_time = GetEngineTime();
-    char sql_str[1280];
+    char sql_str[700];
 
     // 更新回合 end_time    // * 256
     nr_round.updRoundEnd_sqlStr(sql_str, sizeof(sql_str));
@@ -401,12 +399,12 @@ public void OnClientPutInServer(int client)
 
     data.WriteCell(GetTime());
     data.WriteCell(nr_player_data[client].steam_id);
-    data.WriteString(name);
-    data.WriteString(ip);
-    data.WriteString(country);
-    data.WriteString(continent);
-    data.WriteString(region);
-    data.WriteString(city);
+    data.WriteString(name_escape);
+    data.WriteString(ip_escape);
+    data.WriteString(country_escape);
+    data.WriteString(region_escape);
+    data.WriteString(city_escape);
+    data.WriteString(city_escape);
 #endif
 }
 
@@ -423,7 +421,7 @@ Action Timer_OnClientPutInServer(Handle timer, DataPack data)
         steam_id = GetSteamAccountID(client);
     }
 
-    char sql_str[512],      name[MAX_NAME_LENGTH];
+    char sql_str[384],      name[MAX_NAME_LENGTH];
     char ip[32],            country[32],    continent[32],          region[32],     city[32];
     data.ReadString(        name,           MAX_NAME_LENGTH);
     data.ReadString(        ip,             sizeof(ip));
@@ -581,7 +579,7 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
     }
 
 #if defined INCLUDE_MANAGER
-    char sql_str[200];
+    char sql_str[160];
     nr_manager.insNewPlayerHurt_sqlStr(sql_str, sizeof(sql_str), victim_id, attacker_id, weapon_name, real_dmg, damagetype);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 #endif
@@ -794,7 +792,7 @@ void On_player_extracted(Event event, const char[] name, bool dontBroadcast)
             float take_time = game_time - nr_round.begin_time;
             nr_player_data[client].aready_submit_data = true;
 
-            char sql_str[1280];
+            char sql_str[700];
             // 记录回合玩家数据
             nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "extracted");
             nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
@@ -827,7 +825,7 @@ void On_watermelon_rescue(Event event, const char[] name, bool dontBroadcast)
     if( nr_player_data[client].steam_id != 0 )
     {
         // 记录任务 西瓜救援成功（* 记录在任务表中）
-        char sql_str[100];
+        char sql_str[96];
         nr_player_func.insNewWatermelonRescue_sqlStr(sql_str, sizeof(sql_str), client);
         nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
     }
@@ -864,7 +862,7 @@ public void On_player_death(Event event, char[] name, bool dontBroadcast)
                 nr_player_data[attacker].kill_cnt_player += 1;
             }
 
-            char sql_str[1280];
+            char sql_str[700];
             // 记录回合玩家数据
             nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), victim, game_time, "death");
             nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
@@ -893,7 +891,7 @@ public void On_player_leave(Event event, char[] name, bool dontBroadcast)
             float game_time = GetEngineTime();
             nr_player_data[client].aready_submit_data = true;
 
-            char sql_str[1280];
+            char sql_str[700];
 
             // 记录回合玩家数据
             nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "leave");
@@ -945,11 +943,15 @@ void On_player_disconnect(Event event, char[] name, bool dontBroadcast)
         }
 
 #if defined INCLUDE_MANAGER
-        char reason[MAX_NAME_LENGTH],                   networkid[32];
-        event.GetString("reason",       reason,         sizeof(reason),         NULL_STRING);
-        event.GetString("networkid",    networkid,      sizeof(networkid),      NULL_STRING);
+        char reason[MAX_NAME_LENGTH],   reason_escape[MAX_NAME_LENGTH];
+        char networkid[32],             networkid_escape[32];
+        event.GetString("reason",       reason,             sizeof(reason),         NULL_STRING);
+        event.GetString("networkid",    networkid,          sizeof(networkid),      NULL_STRING);
 
-        nr_manager.insNewPlayerDisconnect_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), client, reason, networkid, play_time);
+        nr_dbi.db.Escape(reason,        reason_escape,      sizeof(reason_escape));
+        nr_dbi.db.Escape(networkid,     networkid_escape,   sizeof(networkid_escape));
+
+        nr_manager.insNewPlayerDisconnect_sqlStr(sql_str,   sizeof(sql_str), client, reason_escape, networkid_escape, play_time);
         nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 #endif
     }
