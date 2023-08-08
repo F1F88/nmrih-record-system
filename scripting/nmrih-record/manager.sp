@@ -96,40 +96,36 @@ methodmap NRManager __nullable__
 
     /**
      * 记录发起投票信息 (管理滥用踢人)
-     * 返回字符串, 可用于异步执行. Length = 51 - 6 + 2 * int + 32
-     * min: 97
-     * recommend: 100
+     * 返回字符串, 可用于异步执行. Length = 64 - 6 + 2 * int + 32
+     * min: 111
+     * recommend: 112
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
-     * @param map_id            地图 id
-     * @param round_id          回合 id
-     * @param steam_id          steam account id
+     * @param client            client index
      * @param vote_info         发起的投票信息
      *
      * @return                  No
      */
     public void insNewCallVote_sqlStr(char[] sql_str, int max_length, const int client, const char[] vote_info) {
-        FormatEx(sql_str, max_length, "INSERT INTO vote_info VALUES(NULL,%d,%d,'%s',NOW())", nr_round.round_id, nr_player_data[client].steam_id, vote_info);
+        FormatEx(sql_str, max_length, "INSERT INTO vote_info SET round_id=%d,steam_id=%d,vote_info='%s'", nr_round.round_id, nr_player_data[client].steam_id, vote_info);
     }
 
     /**
      * 记录投票选择信息 (管理滥用踢人)
-     * 返回字符串, 可用于异步执行. Length = 49 - 6 + 2 * int + bool
-     * min: 65
-     * recommend: 70
+     * 返回字符串, 可用于异步执行. Length = 64 - 6 + 2 * int + bool
+     * min: 80
+     * recommend: 80
      *
      * @param sql_str           保存返回的 SQL 字符串
      * @param max_length        SQL 字符串最大长度
-     * @param map_id            地图 id
-     * @param round_id          回合 id
-     * @param steam_id          steam account id
+     * @param client            client index
      * @param vote_option       玩家做出的选项
      *
      * @return                  No
      */
     public void insNewVoteCast_sqlStr(char[] sql_str, int max_length, const int client, const int vote_option) {
-        FormatEx(sql_str, max_length, "INSERT INTO vote_info VALUES(NULL,%d,%d,%d,NOW())", nr_round.round_id, nr_player_data[client].steam_id, vote_option);
+        FormatEx(sql_str, max_length, "INSERT INTO vote_info SET round_id=%d,steam_id=%d,vote_option=%d", nr_round.round_id, nr_player_data[client].steam_id, vote_option);
     }
 }
 
@@ -170,7 +166,7 @@ public Action On_call_vote(int client, const char[] command, int argc)
     char vote_info[32];
     GetCmdArg(1, vote_info, sizeof(vote_info));
 
-    char sql_str[100];
+    char sql_str[112];
     nr_manager.insNewCallVote_sqlStr(sql_str, sizeof(sql_str), client, vote_info);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 
@@ -180,7 +176,7 @@ public Action On_call_vote(int client, const char[] command, int argc)
 // 触发 玩家选择投票
 public void On_vote_cast(Event event, char[] name, bool dontBroadcast)
 {
-    char sql_str[70];
+    char sql_str[80];
     nr_manager.insNewVoteCast_sqlStr(sql_str, sizeof(sql_str), event.GetInt("entityid"), event.GetInt("vote_option"));
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 }

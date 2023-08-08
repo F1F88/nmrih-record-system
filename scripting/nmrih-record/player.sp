@@ -483,8 +483,8 @@ methodmap NRPlayerFunc __nullable__
 
     /**
      * 记录新的玩家名字
-     * 返回字符串, 可用于异步执行. Length = 83 - 4 + int + MAX_NAME_LENGTH
-     * min: 217
+     * 返回字符串, 可用于异步执行. Length = 82 - 4 + int + MAX_NAME_LENGTH
+     * min: 216
      * recommend: 256
      *
      * @param sql_str           保存返回的 SQL 字符串
@@ -495,7 +495,7 @@ methodmap NRPlayerFunc __nullable__
      * @return                  No
      */
     public void insNewPlayerName_sqlStr(char[] sql_str, int max_length, const int steam_id, const char[] name_escape) {
-        FormatEx(sql_str, max_length, "INSERT INTO player_name VALUES (%d,'%s') ON DUPLICATE KEY UPDATE name=VALUES(name);", steam_id, name_escape);
+        FormatEx(sql_str, max_length, "INSERT INTO player_name VALUES (%d,'%s') ON DUPLICATE KEY UPDATE name=VALUES(name)", steam_id, name_escape);
     }
 
 

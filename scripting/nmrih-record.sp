@@ -1,6 +1,7 @@
 // Todo: 在地图、回合信息记录失败时停止记录
 // Todo: 补充撤离时的用时排名
-// Todo  补充使用绷带和医疗包事件及记录字段
+// Todo: 补充使用绷带和医疗包事件及记录字段
+// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误
 
 #pragma newdecls required
 #pragma semicolon 1

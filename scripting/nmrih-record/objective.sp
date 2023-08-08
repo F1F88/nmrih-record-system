@@ -70,8 +70,9 @@ methodmap NRObjective __nullable__
      * 记录新的任务 (可与 记录新的撤离开始 共用)
      * NMO: 由用户信息 ObjectiveNotify 触发
      * NMS: 由事件 new_wave 触发
-     * 返回字符串, 可用于异步执行. Length = 108 - 6 + int(3) * 3 + int(10) + float + MAX_OBJNOTIFY_LEN
-     * min: 384
+     * 返回字符串, 可用于异步执行. Length = 65 - 6 + int(3) * 3 + int(10) + float + MAX_OBJNOTIFY_LEN
+     * min: 349
+     * recommend: 384
      *
      * @param db                数据库对象. 用于转义 obj_info
      * @param sql_str           保存返回的 SQL 字符串
@@ -89,16 +90,10 @@ methodmap NRObjective __nullable__
         char obj_info_escape[MAX_OBJNOTIFY_LEN];
         db.Escape(obj_info, obj_info_escape, MAX_OBJNOTIFY_LEN);
         if( nr_map.map_type == MAP_TYPE_NMO ) {
-            FormatEx(sql_str, max_length
-                , "INSERT INTO objective_info SET round_id=%d, engine_time=%f, serial=%d, obj_id=%d, obj_info='%s', resupply=%d"
-                , nr_round.round_id,    GetEngineTime(),    this.obj_serial,    this.obj_id,    obj_info_escape,    -1
-            );
+            FormatEx(sql_str, max_length, "INSERT INTO objective_info VALUES(NULL,%d,%f,%d,%d,'%s',-1,NOW())", nr_round.round_id, GetEngineTime(), this.obj_serial, this.obj_id, obj_info_escape);
         }
         else if( nr_map.map_type == MAP_TYPE_NMS ) {
-            FormatEx(sql_str, max_length
-                , "INSERT INTO objective_info SET round_id=%d, engine_time=%f, serial=%d, obj_id=%d, obj_info='%s', resupply=%d"
-                , nr_round.round_id,    GetEngineTime(),    this.wave_serial,    -1,            NULL_STRING,        resupply
-            );
+            FormatEx(sql_str, max_length, "INSERT INTO objective_info VALUES(NULL,%d,%f,%d,-1,'%s',%d,NOW())", nr_round.round_id, GetEngineTime(), this.wave_serial, NULL_STRING, resupply);
         }
     }
 }
