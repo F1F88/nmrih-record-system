@@ -23,10 +23,10 @@
 #include "nmo-guard/objective-manager.sp"
 #include "nmrih-record/objective.sp"
 #include "nmrih-record/player.sp"
+#include "nmrih-record/menu.sp"
 #include "nmrih-record/printer.sp"
 
 
-// #include "nmrih_record/menu.sp"
 
 #if defined INCLUDE_MANAGER
 #include "nmrih-record/manager.sp"
@@ -66,6 +66,10 @@ public void OnPluginStart()
     LoadGamedata();
     LoadHook_Objective();
 
+    // menu
+    LoadConVar_Menu();
+    LoadHook_Menu();
+
     // Player
     for(int client=1; client<=MaxClients; ++client)
     {
@@ -78,7 +82,7 @@ public void OnPluginStart()
     // Printer
     nr_printer = new NRPrinter();
     protect_printer_extracted_rank = new ArrayList();
-    LoadPrinterConVar();
+    LoadConVar_Printer();
 
 #if defined INCLUDE_MANAGER
     nr_manager = new NRManager();
@@ -122,6 +126,12 @@ public void OnMapStart()
     if( global_timer == INVALID_HANDLE )
     {
         global_timer = CreateTimer(cv_global_timer_interval, Timer_global, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
+    }
+
+    // 查询并缓存撤离数据
+    if( cv_menu_enabled )
+    {
+        Menu_GetAllExtractedData();
     }
 }
 
@@ -265,6 +275,12 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
         {
             nr_printer.PrintObjWaveMax(nr_objective.wave_end);
         }
+    }
+
+    // 查询并缓存撤离数据
+    if( cv_menu_enabled )
+    {
+        Menu_GetAllExtractedData();
     }
 
     if( nr_printer.show_extraction_time )
