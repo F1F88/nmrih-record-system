@@ -1,7 +1,6 @@
 // Todo: 在地图、回合信息记录失败时停止记录
-// Todo: 补充撤离时的用时排名
 // Todo: 补充使用绷带和医疗包事件及记录字段
-// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误
+// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误 || 删除 manager 工厂
 
 #pragma newdecls required
 #pragma semicolon 1
@@ -805,13 +804,12 @@ void On_player_extracted(Event event, const char[] name, bool dontBroadcast)
     {
         if( nr_player_data[client].aready_submit_data == false )
         {
-            float game_time = GetEngineTime();
-            float take_time = game_time - nr_round.begin_time;
+            float engine_time = GetEngineTime();
             nr_player_data[client].aready_submit_data = true;
 
             char sql_str[700];
             // 记录回合玩家数据
-            nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, game_time, "extracted");
+            nr_player_func.insNewRoundData_sqlStr(sql_str, sizeof(sql_str), client, engine_time, "extracted");
             nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_High);
 
             // 累加统计
@@ -822,7 +820,7 @@ void On_player_extracted(Event event, const char[] name, bool dontBroadcast)
             // [提示] {name} 撤离成功! 用时: {minute}:{seconds} 击杀: {int}
             if( nr_printer.show_player_extraction )
             {
-                nr_printer.PrintPlayerExtraction(client, take_time);
+                nr_printer.PrintPlayerExtraction(client, engine_time);
             }
 
             nr_player_data[client].cleanup_stats();

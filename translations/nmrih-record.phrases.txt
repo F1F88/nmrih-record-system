@@ -6,25 +6,25 @@
 {
     "HEAD"
     {
-        "en"        "{green}[Notice]{default} "
-        "chi"       "{green}[提示]{default} "
-        "zho"       "{green}[提示]{default} "
+        "en"        "{gray}[NR]{default} "
+        "chi"       "{gray}[NR]{default} "
+        "zho"       "{gray}[NR]{default} "
     }
 
     "Player PlayTime"
     {
         "#format"   "{1:t},{2:s},{3:s},{4:N},{5:.2f}"
-        "en"        "{1}Welcome{gray} {4} {default}from {gray}unknown{default} (play time:{lightyellow} {5} {default}hours)"
-        "chi"       "{1}欢迎{gray} 未知星球 {default}的 {gray}{4}{default} (在服时长{lightyellow}{5}{default}小时)"
-        "zho"       "{1}歡迎{gray} 未知星球 {default}的 {gray}{4}{default} (在服時長{lightyellow}{5}{default}小時)"
+        "en"        "{1}Welcome {4} from {lightyellow}unknown{default} (play time {lightgreen}{5}{default}hours)"
+        "chi"       "{1}欢迎未知星球的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
+        "zho"       "{1}歡迎未知星球的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
     }
 
     "Player PlayTime_Region"
     {
         "#format"   "{1:t},{2:s},{3:s},{4:N},{5:.2f}"
-        "en"        "{1}Welcome{gray} {4} {default}from{gray} {2} {3} {default}(play time:{lightyellow} {5} {default}hours)"
-        "chi"       "{1}欢迎{gray} {2} {3} {default}的 {gray}{4}{default} (在服时长{lightyellow}{5}{default}小时)"
-        "zho"       "{1}歡迎{gray} {2} {3} {default}的 {gray}{4}{default} (在服時長{lightyellow}{5}{default}小時)"
+        "en"        "{1}Welcome {lightyellow}{4}{default} from {lightyellow}{2} {3}{default} (play time {lightgreen}{5}{default} hours)"
+        "chi"       "{1}欢迎{lightyellow}{2}{3}{default}的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
+        "zho"       "{1}歡迎{lightyellow}{2}{3}{default}的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
     }
 
     "Obj Extracted_Taketime_NoOne"
@@ -37,16 +37,14 @@
 
     "Obj Extracted_Taketime"
     {
-        "#format"	"{1:t},{2:2d},{3:2.2f},{4:2d},{5:2.2f},{6:d}"
-        "en"        "{1}Total {lightgreen}{6}{default} people | Fastest{lightgreen} {2}:{3} {default}| Average{lightgreen} {4}:{5} {default}"
-        "chi"       "{1}共{lightgreen}{6}{default}人 | 最快{lightgreen}{2}分{3}秒{default} | 平均{lightgreen}{4}分{5}秒{default}"
-        "zho"       "{1}共{lightgreen}{6}{default}人 | 最快{lightgreen}{2}分{3}秒{default} | 平均{lightgreen}{4}分{5}秒{default}"
+        "#format"	"{1:t},{2:d},{3:d},{4:.2f},{5:d},{6:.2f}"
+        "en"        "{1}Total {lightgreen}{2}{default} people | {orangered}No.1 {lightgreen}{3}{default}m {lightgreen}{4}{default}s | {orangered}Average {lightgreen}{5}{default}m {lightgreen}{6}{default}s"
+        "chi"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}No.1 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
+        "zho"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}No.1 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
     }
 
     "Obj NMO ObjChainMD5"
     {
-        // This area is about to fall, we need to escape along the route
-        // 这片区域即将沦陷, 我们计划沿此路线寻找新的避难所
         "#format"	"{1:t},{2:s}"
         "en"        "{1}Escape route{lightyellow} {2} {default}"
         "chi"       "{1}撤离路线{lightyellow} {2} {default}"
@@ -56,41 +54,41 @@
     "Obj NMO OnObjStart"
     {
         "#format"	"{1:t},{2:d},{3:d},{4:d},{5:s}"             // 可选输出: 任务信息: {5}
-        "en"        "{1}Objective ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default})"
-        "chi"       "{1}任务ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default})"
-        "zho"       "{1}任務ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default})"
+        "en"        "{1}Objective ID: {2} ({3}/{4})"
+        "chi"       "{1}任务ID: {2} ({3}/{4})"
+        "zho"       "{1}任務ID: {2} ({3}/{4})"
     }
 
     "Obj NMO OnExtractionBegin"
     {
-        "#format"	"{1:t},{2:d},{3:d},{4:d},{5:2d},{6:2.2f}"   // 可选输出: 任务完成, 快撤离
-        "en"        "{1}Objective ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default}) | Take time {lightgreen}{5}:{6}{default}"
-        "chi"       "{1}任务ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default}) | {lightgreen}用时 {5} 分 {6} 秒{default}"
-        "zho"       "{1}任務ID: {lightyellow}{2}{default} ({gray}{3}{default}/{gray}{4}{default}) | {lightgreen}用時 {5} 分 {6} 秒{default}"
+        "#format"	"{1:t},{2:d},{3:d},{4:d},{5:d},{6:.2f}"   // 可选输出: 任务完成, 快撤离
+        "en"        "{1}Objective ID: {2} ({3}/{4})  Take time {lightgreen}{5}{default}m {lightgreen}{6}{default}s"
+        "chi"       "{1}任务ID: {2} ({3}/{4})  用时 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
+        "zho"       "{1}任務ID: {2} ({3}/{4})  用時 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
     }
 
     "Obj NMS MaxWave"
     {
         "#format"	"{1:t},{2:s},{3:d}"
-        "en"        "{1}Current Map: {gray}{2}{default} | waves: {gray}{3}{default}"
-        "chi"       "{1}当前地图: {gray}{2}{default} | wave数: {gray}{3}{default}"
-        "zho"       "{1}當前地圖: {gray}{2}{default} | wave數: {gray}{3}{default}"
+        "en"        "{1}Current Map: {lightyellow}{2}{default} | waves: {lightyellow}{3}{default}"
+        "chi"       "{1}当前地图: {lightyellow}{2}{default} | wave数: {lightyellow}{3}{default}"
+        "zho"       "{1}當前地圖: {lightyellow}{2}{default} | wave數: {lightyellow}{3}{default}"
     }
 
     "Obj NMS OnNewWave"
     {
         "#format"	"{1:t},{2:d},{3:d},{4:t}"
-        "en"        "{1}wave: {gray}{2}{default} / {gray}{3}{default}) {4}"
-        "chi"       "{1}wave: {gray}{2}{default} / {gray}{3}{default}) {4}"
-        "zho"       "{1}wave: {gray}{2}{default} / {gray}{3}{default}) {4}"
+        "en"        "{1}wave: {2} / {3} {4}"
+        "chi"       "{1}wave: {2} / {3} {4}"
+        "zho"       "{1}wave: {2} / {3} {4}"
     }
 
     "Obj NMS OnNewWave NoEndWave"
     {
         "#format"	"{1:t},{2:d},{3:t}"
-        "en"        "{1}wave: {gray}{2}{default} {3}"
-        "chi"       "{1}wave: {gray}{2}{default} {3}"
-        "zho"       "{1}wave: {gray}{2}{default} {3}"
+        "en"        "{1}wave: {2} {3}"
+        "chi"       "{1}wave: {2} {3}"
+        "zho"       "{1}wave: {2} {3}"
     }
 
     "Obj NMS OnNewWave Null"
@@ -109,34 +107,42 @@
 
     "Obj NMS OnExtractionBegin"
     {
-        "#format"	"{1:t},{2:2d},{3:2.2f}"
-        "en"        "{1}Extraction Begin, Run! ({lightgreen}Take time {2}:{3}{default})"
-        "chi"       "{1}救援已到达, 快润! ({lightgreen}用时 {2} 分 {3} 秒{default})"
-        "zho"       "{1}救援已到達, 快跑! ({lightgreen}用時 {2} 分 {3} 秒{default})"
+        "#format"	"{1:t},{2:d},{3:.2f}"
+        "en"        "{1}Extraction Begin, Run! (Take time {lightgreen}{2}{default}m {lightgreen}{3}{default}s)"
+        "chi"       "{1}救援已到达, 快润! (用时 {lightgreen}{2}{default}分{lightgreen}{3}{default}秒)"
+        "zho"       "{1}救援已到達, 快跑! (用時 {lightgreen}{2}{default}分{lightgreen}{3}{default}秒)"
     }
 
     "Obj OnWatermelonRescue"
     {
         "#format"   "{1:t},{2:N}"
-        "en"        "{1}{gray}{2}{default} rescures the watermelon!"
-        "chi"       "{1}{gray}{2}{default} 拯救了西瓜!"
-        "zho"       "{1}{gray}{2}{default} 拯救了西瓜!"
+        "en"        "{1}{lightyellow}{2}{default} rescures the watermelon!"
+        "chi"       "{1}{lightyellow}{2}{default} 拯救了西瓜!"
+        "zho"       "{1}{lightyellow}{2}{default} 拯救了西瓜!"
     }
 
     "Player SteamID Is Zero"
     {
         "#format"   "{1:t},{2:N}"
-        "en"        "{1}The SteamAccountID of {gray}{2}{default} is 0 and cannot be recorded"
-        "chi"       "{1}{gray}{2} 的 steam id 为 0, 无法记录"
-        "zho"       "{1}{gray}{2} 的 steam id 为 0, 無法記錄"
+        "en"        "{1}The SteamAccountID of {2} is 0 and cannot be recorded"
+        "chi"       "{1}{2} 的 steam id 为 0, 无法记录"
+        "zho"       "{1}{2} 的 steam id 为 0, 無法記錄"
     }
 
     "Player OnPlayer_Extracted"
     {
-        "#format"   "{1:t},{2:N},{3:2d},{4:2.2f},{5:d}"
-        "en"        "{1}{2}extracted | Take time {orangered}{3}:{4}{default} | Rank{orangered}No.{5}{default}"
-        "chi"       "{1}{2}已撤离 | 耗时{orangered}{3}分{4}秒{default} | 排名{orangered}No.{5}{default}"
-        "zho"       "{1}{2}已撤離 | 耗時{orangered}{3}分{4}秒{default} | 排名{orangered}No.{5}{default}"
+        "#format"   "{1:t},{2:N},{3:d},{4:d},{5:.2f}"
+        "en"        "{1}{lightyellow}{2} extracted {orangered}No.{3} {lightgreen}{4}{default}m {lightgreen}{5}{default}s"
+        "chi"       "{1}{lightyellow}{2} 已撤离 {orangered}No.{3} {lightgreen}{4}{default}分{lightgreen}{5}{default}秒"
+        "zho"       "{1}{lightyellow}{2} 已撤離 {orangered}No.{3} {lightgreen}{4}{default}分{lightgreen}{5}{default}秒"
+    }
+
+    "Player OnPlayer_Extracted Penalty"
+    {
+        "#format"   "{1:t},{2:N},{3:d},{4:d},{5:.2f},{6:d},{7:.2f}"
+        "en"        "{1}{lightyellow}{2}{default} extracted {orangered}No.{3} {lightgreen}{4}{default}m {lightgreen}{5}{default}s {orange}+{6}m {7}s"
+        "chi"       "{1}{lightyellow}{2}{default} 已撤离 {orangered}No.{3} {lightgreen}{4}{default}分{lightgreen}{5}{default}秒 {orange}+{6}分{7}秒"
+        "zho"       "{1}{lightyellow}{2}{default} 已撤離 {orangered}No.{3} {lightgreen}{4}{default}分{lightgreen}{5}{default}秒 {orange}+{6}分{7}秒"
     }
 
     "Menu Invalid"
@@ -149,10 +155,10 @@
 
     "Menu Maps title"
     {
-        "#format"   "{1:s},{2:.1f},{3:.0f}"
-        "en"        "[Top] - Map    By F1F88\n \n* Current Map: {1}\n* Extra penalty time {3}%% for spawn players after round begin {2}seconds\n "
-        "chi"       "[榜单] - 地图    By F1F88\n \n* 当前地图 {1}\n* 回合开始 {2}s 后复活的玩家额外罚时{3}%%\n "
-        "zho"       "[榜單] - 地圖    By F1F88\n \n* 當前地圖 {1}\n* 回合開始 {2}s 後復活的玩家額外罰時{3}%%\n "
+        "#format"   "{1:s},{2:.0f},{3:.0f}"
+        "en"        "[Top] - Map    By F1F88\n \n* Current Map: {1}\n* Extra penalty time {3}%% for spawn players after round begin {2} seconds\n "
+        "chi"       "[榜单] - 地图    By F1F88\n \n* 当前地图 {1}\n* 回合开始 {2} 秒后复活的玩家额外罚时{3}%%\n "
+        "zho"       "[榜單] - 地圖    By F1F88\n \n* 當前地圖 {1}\n* 回合開始 {2} 秒後復活的玩家額外罰時{3}%%\n "
     }
 
     "Menu Obj_chain title"
@@ -167,7 +173,7 @@
     {
         "#format"   "{1:s},{2:s}"
         "en"        "[Top] - Data   By F1F88\n \n* {1}\n* {2}\n "
-        "chi"       "[榜单] - Data   By F1F88\n \n* {1}\n* {2}\n "
-        "zho"       "[榜單] - Data   By F1F88\n \n* {1}\n* {2}\n "
+        "chi"       "[榜单] - 数据   By F1F88\n \n* {1}\n* {2}\n "
+        "zho"       "[榜單] - 數據   By F1F88\n \n* {1}\n* {2}\n "
     }
 }

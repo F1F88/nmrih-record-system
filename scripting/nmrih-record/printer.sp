@@ -143,10 +143,10 @@ methodmap NRPrinter __nullable__
      *
      */
     public void PrintExtractedAvgTime() {
-        char sql_str[350];
+        char sql_str[512];
         FormatEx(sql_str, sizeof(sql_str)
-            , "SELECT d.engine_time-r.round_begin_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted'"
-            , protect_map_map_name, protect_obj_chain_md5
+            , "SELECT IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) AS take_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted' ORDER BY take_time"
+            , cv_menu_spawn_tolerance, 1.0 + cv_menu_spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
         );
         nr_dbi.db.Query(CB_asyncGetExtractedRank, sql_str, _, DBPrio_Normal);   // 特定回调
     }
@@ -187,31 +187,45 @@ methodmap NRPrinter __nullable__
         }
     }
 
-    public void PrintPlayerExtraction(const int client, const float take_time) {
-        int   take_time_minute  = RoundToFloor( take_time / 60.0 );
-        float take_time_seconds = take_time % 60.0;
+    public void PrintPlayerExtraction(const int client, const float engine_time) {
+        float take_time = engine_time - nr_round.begin_time;
+        float penalty_time = nr_player_data[client].spawn_time <= (nr_round.begin_time + cv_menu_spawn_tolerance) ? 0.0 : take_time * cv_menu_spawn_penalty_factor;
+        float final_time = take_time + penalty_time;
 
         int rank_id = 0;
         if( protect_printer_extracted_rank.Length == 0 ) {
-            protect_printer_extracted_rank.Push(take_time);
+            protect_printer_extracted_rank.Push(final_time);
         }
         else {
             for( ; rank_id < protect_printer_extracted_rank.Length; ++rank_id) {
-                if( FloatCompare(take_time, protect_printer_extracted_rank.Get(rank_id)) <= 0 ) {
+                if( FloatCompare(final_time, protect_printer_extracted_rank.Get(rank_id)) <= 0 ) {
                     break;
                 }
             }
             if( rank_id < protect_printer_extracted_rank.Length ) {
                 protect_printer_extracted_rank.ShiftUp(rank_id);
-                protect_printer_extracted_rank.Set(rank_id, take_time);
+                protect_printer_extracted_rank.Set(rank_id, final_time);
             }
             else {
-                protect_printer_extracted_rank.Push(take_time);
+                protect_printer_extracted_rank.Push(final_time);
             }
         }
 
-        // "[提示]{name} 撤离成功! 用时: {green}{min}:{sec}{default}  | 排名: {green}{5}{default}"
-        CPrintToChatAll("%t", "Player OnPlayer_Extracted", "HEAD", client, take_time_minute, take_time_seconds, rank_id + 1);
+        int   take_time_minute  = RoundToFloor( final_time / 60.0 );
+        float take_time_seconds = final_time % 60.0;
+        if( penalty_time == 0.0 )
+        {
+            // "[提示]{name} 撤离成功! 用时: {green}{min}:{sec}{default}  | 排名: {green}{5}{default}"
+            CPrintToChatAll("%t", "Player OnPlayer_Extracted", "HEAD", client, rank_id + 1, take_time_minute, take_time_seconds);
+        }
+        else
+        {
+            int   penalty_minute    = RoundToFloor( penalty_time / 60.0 );
+            float penalty_seconds   = penalty_time % 60.0;
+            // "[提示]{name} 撤离成功! 用时: {green}{min}:{sec}{default}  | 排名: {green}{5}{default}"
+            CPrintToChatAll("%t", "Player OnPlayer_Extracted Penalty", "HEAD", client, rank_id + 1, take_time_minute, take_time_seconds, penalty_minute, penalty_seconds);
+
+        }
     }
 
     public void PrintWatermelonRescue(const int client) {
@@ -269,27 +283,27 @@ void CB_asyncGetExtractedRank(Database db, DBResultSet results, const char[] err
 {
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
-        float tmp, sum_time, avg_time = 0.0;
+        float t_take_time, sum_time;
         while( results.FetchRow() )
         {
-            tmp = results.FetchFloat(0);
-            sum_time += tmp;
-            protect_printer_extracted_rank.Push(tmp);
+            t_take_time = results.FetchFloat(0);
+            sum_time += t_take_time;
+            protect_printer_extracted_rank.Push(t_take_time);
         }
+
         if( protect_printer_extracted_rank.Length <= 0 )
         {
             CPrintToChatAll("%t", "Obj Extracted_Taketime_NoOne", "HEAD");
         }
         else
         {
-            protect_printer_extracted_rank.Sort(Sort_Ascending, Sort_Float);
-            avg_time = sum_time / protect_printer_extracted_rank.Length;
+            float avg_time = sum_time / protect_printer_extracted_rank.Length;
             int   avg_time_minute   = RoundToFloor( avg_time / 60.0 );
             float avg_time_seconds  = avg_time % 60.0;
             float fast_time = protect_printer_extracted_rank.Get(0);
             int   fast_time_minute  = RoundToFloor( fast_time / 60.0 );
             float fast_time_seconds = fast_time % 60.0;
-            CPrintToChatAll("%t", "Obj Extracted_Taketime", "HEAD", fast_time_minute, fast_time_seconds, avg_time_minute, avg_time_seconds, protect_printer_extracted_rank.Length);
+            CPrintToChatAll("%t", "Obj Extracted_Taketime", "HEAD", protect_printer_extracted_rank.Length, fast_time_minute, fast_time_seconds, avg_time_minute, avg_time_seconds);
         }
     }
     else

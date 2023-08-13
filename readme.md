@@ -36,19 +36,25 @@
 | sm_nr_printer_show_player_extraction |     0     |                     是否输出玩家撤离成功                     |
 | sm_nr_printer_show_watermelon_rescue |     0     |              是否在西瓜救援成功时, 输出相关信息              |
 
+|          菜单参数          |  默认值   |                             描述                             |
+| :-----------------------------: | :---------: | :----------------------------------------------------------: |
+|     sm_nr_menu_enabled     |     0     |          是否启用菜单          |
+|  sm_nr_menu_spawn_tolerance  | 10.0（秒） | 用于指定round_begin多长时间后的复活玩家将被罚时 |
+|  sm_nr_menu_spawn_penalty_factor  |     0.25     | 用于指定超时复活玩家额外罚时的百分比 |
+
 
 
 ## Requirements
 
-- 仅适用于 ==No More Room In Hell ==
+- 仅适用于 ==No More Room In Hell==
 
 - [SourceMod 1.11](https://www.sourcemod.net/downloads.php?branch=stable) or higher
 
 - [multicolors](https://github.com/Bara/Multi-Colors)
 
-- [smlib/crypt - Crypt_MD5(part)](https://github.com/bcserv/smlib/tree/transitional_syntax)
+- [smlib/crypt - [Crypt_MD5(part)]](https://github.com/bcserv/smlib/tree/transitional_syntax)
 
-- [nmo-guard - gamedata & objective-manager.sp(have modification)](https://github.com/dysphie/nmo-guard)
+- [nmo-guard - [gamedata & objective-manager.sp]](https://github.com/dysphie/nmo-guard)
 
 - MySQL 5.7 or higher
 
@@ -56,7 +62,8 @@
 
 ## Installation
 - 在 MySQL 中为你的服务器创建一个数据库，名字与参数: `nmrih_record` 值相同；
-- 使用 [./sql/create_table_main.sql](./sql/create_table_main.sql) 创建核心数据表，如果编译时定义了 `INCLUDE_MANAGER`，则还需要使用 [./sql/create_table_manager.sql](./sql/create_table_manager.sql) 创建相关数据表；
+- 使用 [./sql/create_table_main.sql](./sql/create_table_main.sql) 创建核心数据表；
+- 如果编译时定义了 `INCLUDE_MANAGER`，则还需要使用 [./sql/create_table_manager.sql](./sql/create_table_manager.sql) 创建相关数据表；
 - 如果查询业务多（ printer 参数都为 1 ），建议使用 [create_table_index_main.sql](./sql/create_table_index_main.sql) 为核心表创建索引，提高查询效率；
 - Edit `addons/sourcemod/configs/databases.cfg`, add a named `nmrih_record` configuration, connection of the newly created database
 - Grab the latest ZIP from releases

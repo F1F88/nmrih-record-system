@@ -1,7 +1,6 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-// Todo: refresh menu
 // Todo: menu cooldown
 // Todo: client preference
 
@@ -29,7 +28,7 @@ void LoadConVar_Menu()
     cv_menu_enabled = convar.BoolValue;
     (convar = CreateConVar("sm_nr_menu_spawn_tolerance",        "10.0", "round_begin 后这么多秒内复活的玩家在计算通关时长时将被罚时")).AddChangeHook(OnConVarChange_Menu);
     cv_menu_spawn_tolerance = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_menu_spawn_penalty_factor",   "0.25", "罚时. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Menu);
+    (convar = CreateConVar("sm_nr_menu_spawn_penalty_factor",   "0.25", "额外罚时百分比. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Menu);
     cv_menu_spawn_penalty_factor = convar.FloatValue;
 }
 
@@ -403,8 +402,6 @@ int MenuHandler_Ranks(Menu menu, MenuAction action, int param1, int param2)
                     char item_info[MAX_MAP_NAME_LEN];   // map_name
                     menu.GetItem(0, item_info, MAX_MAP_NAME_LEN);
 
-                    LogMessage("item_info: %s", item_info);
-
                     Menu menu_routes;
                     private_menu_public_menu.GetValue(item_info, menu_routes);
                     menu_routes.Display(param1, 0);
@@ -436,7 +433,7 @@ Action Cmd_top(int client, int args)
 
     if( private_menu_public_menu == INVALID_HANDLE )
     {
-        ReplyToCommand(client, "%t", "Menu Invalid");
+        ReplyToCommand(client, "%t", "Menu Invalid", "HEAD");
         return Plugin_Handled;
     }
 
