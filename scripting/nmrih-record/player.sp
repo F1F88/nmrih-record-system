@@ -1,10 +1,21 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define         PREFIX_PLAYER       "[NR-Player] "
-#define         MAX_WEAPON_LEN      32
+#define         PREFIX_PLAYER                               "[NR-Player] "
+#define         MAX_WEAPON_LEN                              32
 #undef  	    MAXPLAYERS
-#define         MAXPLAYERS          9
+#define         MAXPLAYERS                                  9
+#define         CLIENT_PREFS_BIT_SHOW_MENU_TIME             (1 << 0)
+#define         CLIENT_PREFS_BIT_SHOW_WELCOME               (1 << 1)
+#define         CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK       (1 << 2)
+#define         CLIENT_PREFS_BIT_SHOW_OBJ_CHAIN_MD5         (1 << 3)
+#define         CLIENT_PREFS_BIT_SHOW_OBJ_START             (1 << 4)
+#define         CLIENT_PREFS_BIT_SHOW_WAVE_MAX              (1 << 5)
+#define         CLIENT_PREFS_BIT_SHOW_WAVE_START            (1 << 6)
+#define         CLIENT_PREFS_BIT_SHOW_EXTRACTION_BEGIN      (1 << 7)
+#define         CLIENT_PREFS_BIT_SHOW_PLAYER_EXTRACTION     (1 << 8)
+#define         CLIENT_PREFS_BIT_SHOW_WATERMELON_RESCURE    (1 << 9)
+#define         CLIENT_PREFS_BIT_DEFAULT                    (1 << 0) + (1 << 1) + (1 << 2) + (1 << 3) + (1 << 4) + (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9)
 
 enum ZOMBIE_TYPE {
     Zombie_Type_None = 0,
@@ -72,6 +83,7 @@ float           private_cv_ff_factor
                 , private_cv_bleedout_dmg
                 , private_cv_player_play_time_interval;
 
+int             private_player_prefs[MAXPLAYERS + 1];
 int             private_player_steam_id[MAXPLAYERS + 1]
                 , private_player_put_in_time[MAXPLAYERS + 1];
 
@@ -143,6 +155,11 @@ methodmap NRPlayerData __nullable__
 
     property int index {
         public get()                    { return view_as<int>(this); }
+    }
+
+    property int prefs {
+        public get()                    { return private_player_prefs[this.index]; }
+        public set(int value)           { private_player_prefs[this.index] = value; }
     }
 
     property int steam_id {

@@ -5,15 +5,24 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define INCLUDE_MANAGER
-
 #include <sourcemod>
 #include <geoip>
 #include <sdktools>
 #include <sdkhooks>
 #include <multicolors>
 
+#undef  REQUIRE_EXTENSIONS
+#include <clientprefs>
+#define REQUIRE_EXTENSIONS
 #include <smlib/crypt>
+
+#define INCLUDE_MANAGER
+#define NR_VERSION                  "v230816"
+
+Handle  global_timer;               // 全局通用 | 定时循环调用
+float   cv_global_timer_interval;
+Cookie  global_clientPrefs;
+
 
 #include <dbi>
 #include "nmrih-record/dbi.sp"
@@ -22,31 +31,34 @@
 #include "nmo-guard/objective-manager.sp"
 #include "nmrih-record/objective.sp"
 #include "nmrih-record/player.sp"
-#include "nmrih-record/menu.sp"
 #include "nmrih-record/printer.sp"
-
-
+#include "nmrih-record/menu.sp"
 
 #if defined INCLUDE_MANAGER
 #include "nmrih-record/manager.sp"
 #endif
 
-float   cv_global_timer_interval;
-Handle  global_timer;    // 全局通用 | 定时循环调用
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
+    MarkNativeAsOptional("Cookie.Cookie");
+    MarkNativeAsOptional("Cookie.Get");
+    MarkNativeAsOptional("Cookie.GetInt");
+    MarkNativeAsOptional("Cookie.Set");
+    MarkNativeAsOptional("Cookie.SetInt");
+    MarkNativeAsOptional("SetCookieMenuItem");
     return APLRes_Success;
 }
 
 public void OnPluginStart()
 {
+    LoadTranslations("common.phrases");
     LoadTranslations("nmrih-record.phrases");
 
     ConVar convar;
     (convar = CreateConVar("sm_nr_global_timer_interval", "60.0", "全局定时器时间间隔(秒) | 不建议修改 | 目前用于维护数据库连接与更新玩家游戏时长")).AddChangeHook(OnGlobalConVarChange);
     cv_global_timer_interval = convar.FloatValue;
-    // CreateConVar("sm_nmrih_record_version", "1.0.0");
+    CreateConVar("sm_nr_version", NR_VERSION);
 
     // dbi
     nr_dbi = new NRDbi();
@@ -82,6 +94,11 @@ public void OnPluginStart()
     nr_printer = new NRPrinter();
     protect_printer_extracted_rank = new ArrayList();
     LoadConVar_Printer();
+
+    if( LibraryExists("clientprefs") )
+    {
+        LoadClientPrefs_Menu();
+    }
 
 #if defined INCLUDE_MANAGER
     nr_manager = new NRManager();
@@ -128,7 +145,7 @@ public void OnMapStart()
     }
 
     // 查询并缓存撤离数据
-    if( cv_menu_enabled )
+    if( cv_menu_top_enabled )
     {
         Menu_GetAllExtractedData();
     }
@@ -277,7 +294,7 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
     }
 
     // 查询并缓存撤离数据
-    if( cv_menu_enabled )
+    if( cv_menu_top_enabled )
     {
         Menu_GetAllExtractedData();
     }
@@ -382,6 +399,7 @@ public void OnClientPutInServer(int client)
 {
     nr_player_data[client].cleanup_stats();                         // 保证玩家统计数据已清空
     nr_player_data[client].put_in_time = GetTime();
+    nr_player_data[client].prefs = global_clientPrefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
     nr_player_data[client].steam_id = GetSteamAccountID(client);    // 避免 OnClientAuthorized 可能触发更早产生的问题
 
     SDKHook(client, SDKHook_OnTakeDamage, On_player_TakeDamage);

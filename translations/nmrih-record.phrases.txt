@@ -4,7 +4,7 @@
 //	"\x07" = " " (for  RrGgBb), "\x08" = "" (for RrGgBbAa)
 "Phrases"
 {
-    "HEAD"
+    "Chat Head"
     {
         "en"        "{gray}[NR]{default} "
         "chi"       "{gray}[NR]{default} "
@@ -15,16 +15,16 @@
     {
         "#format"   "{1:t},{2:s},{3:s},{4:N},{5:.2f}"
         "en"        "{1}Welcome {4} from {lightyellow}unknown{default} (play time {lightgreen}{5}{default}hours)"
-        "chi"       "{1}欢迎未知星球的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
-        "zho"       "{1}歡迎未知星球的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
+        "chi"       "{1}欢迎 未知星球的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
+        "zho"       "{1}歡迎 未知星球的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
     }
 
     "Player PlayTime_Region"
     {
         "#format"   "{1:t},{2:s},{3:s},{4:N},{5:.2f}"
         "en"        "{1}Welcome {lightyellow}{4}{default} from {lightyellow}{2} {3}{default} (play time {lightgreen}{5}{default} hours)"
-        "chi"       "{1}欢迎{lightyellow}{2}{3}{default}的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
-        "zho"       "{1}歡迎{lightyellow}{2}{3}{default}的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
+        "chi"       "{1}欢迎 {lightyellow}{2} {3}{default}的 {lightyellow}{4}{default} (在服时长{lightgreen}{5}{default}小时)"
+        "zho"       "{1}歡迎 {lightyellow}{2} {3}{default}的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
     }
 
     "Obj Extracted_Taketime_NoOne"
@@ -38,9 +38,9 @@
     "Obj Extracted_Taketime"
     {
         "#format"	"{1:t},{2:d},{3:d},{4:.2f},{5:d},{6:.2f}"
-        "en"        "{1}Total {lightgreen}{2}{default} people | {orangered}No.1 {lightgreen}{3}{default}m {lightgreen}{4}{default}s | {orangered}Average {lightgreen}{5}{default}m {lightgreen}{6}{default}s"
-        "chi"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}No.1 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
-        "zho"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}No.1 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
+        "en"        "{1}Total {lightgreen}{2}{default} people | {orangered}Fastest {lightgreen}{3}{default}m {lightgreen}{4}{default}s | {orangered}Average {lightgreen}{5}{default}m {lightgreen}{6}{default}s"
+        "chi"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}最快 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
+        "zho"       "{1}共 {lightgreen}{2}{default} 人 | {orangered}最快 {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 | {orangered}平均 {lightgreen}{5}{default}分{lightgreen}{6}{default}秒"
     }
 
     "Obj NMO ObjChainMD5"
@@ -149,31 +149,137 @@
     {
         "#format"   "{1:t}"
         "en"        "{1}Data update in progress, please try again later..."
-        "chi"       "{1}榜单数据更新中, 请稍后再试..."
-        "zho"       "{1}榜單數據更新中, 請稍後再試..."
+        "chi"       "{1}数据更新中, 请稍后再试..."
+        "zho"       "{1}數據更新中, 請稍後再試..."
+    }
+
+    "Menu Title Head"
+    {
+        "en"        "[NR]"
+        "chi"       "[NR]"
+        "zho"       "[NR]"
+    }
+
+    "Menu Catalog title"
+    {
+        "#format"   "{1:s}"
+        "en"        "Catalog    By F1F88\n \n- Version: {1}\n "
+        "chi"       "目录    By F1F88\n \n- 版本: {1}\n "
+        "zho"       "目錄    By F1F88\n \n- 版本: {1}\n "
+    }
+
+    "Menu Catalog item_maps"
+    {
+        "en"        "Rank - Fastest Extraction"
+        "chi"       "榜单 - 最快撤离"
+        "zho"       "榜單 - 最快撤離"
+    }
+
+    "Menu Catalog item_prefs"
+    {
+        "en"        "Personal preference settings"
+        "chi"       "个人偏好设置"
+        "zho"       "個人偏好設定"
     }
 
     "Menu Maps title"
     {
         "#format"   "{1:s},{2:.0f},{3:.0f}"
-        "en"        "[Top] - Map    By F1F88\n \n* Current Map: {1}\n* Extra penalty time {3}%% for spawn players after round begin {2} seconds\n "
-        "chi"       "[榜单] - 地图    By F1F88\n \n* 当前地图 {1}\n* 回合开始 {2} 秒后复活的玩家额外罚时{3}%%\n "
-        "zho"       "[榜單] - 地圖    By F1F88\n \n* 當前地圖 {1}\n* 回合開始 {2} 秒後復活的玩家額外罰時{3}%%\n "
+        "en"        "Map    By F1F88\n \n* Current Map: {1}\n* Extra penalty time {3}%% for spawn players after round begin {2} seconds\n "
+        "chi"       "地图    By F1F88\n \n* 当前地图 {1}\n* 回合开始 {2} 秒后复活的玩家额外罚时{3}%%\n "
+        "zho"       "地圖    By F1F88\n \n* 當前地圖 {1}\n* 回合開始 {2} 秒後復活的玩家額外罰時{3}%%\n "
     }
 
     "Menu Obj_chain title"
     {
         "#format"   "{1:s}"
-        "en"        "[Top] - Route   By F1F88\n \n* {1}\n "
-        "chi"       "[榜单] - 路线    By F1F88\n \n* {1}\n "
-        "zho"       "[榜單] - 路線    By F1F88\n \n* {1}\n "
+        "en"        "Route   By F1F88\n \n* {1}\n "
+        "chi"       "路线    By F1F88\n \n* {1}\n "
+        "zho"       "路線    By F1F88\n \n* {1}\n "
     }
 
     "Menu Rank title"
     {
         "#format"   "{1:s},{2:s}"
-        "en"        "[Top] - Data   By F1F88\n \n* {1}\n* {2}\n "
-        "chi"       "[榜单] - 数据   By F1F88\n \n* {1}\n* {2}\n "
-        "zho"       "[榜單] - 數據   By F1F88\n \n* {1}\n* {2}\n "
+        "en"        "Data   By F1F88\n \n* {1}\n* {2}\n "
+        "chi"       "数据   By F1F88\n \n* {1}\n* {2}\n "
+        "zho"       "數據   By F1F88\n \n* {1}\n* {2}\n "
+    }
+
+    "Menu Prefs title"
+    {
+        "en"        "Preferences    By F1F88\n \n "
+        "chi"       "偏好设置    By F1F88\n \n "
+        "zho"       "偏好設定    By F1F88\n \n "
+    }
+
+    "Menu Prefs SHOW_MENU_TIME"
+    {
+        "en"        "Menu automatically closes without operation for 30 seconds"
+        "chi"       "菜单 30 秒无操作自动关闭"
+        "zho"       "選單 30 秒無操作自動關閉"
+    }
+
+    "Menu Prefs SHOW_WELCOME"
+    {
+        "en"        "Whether to display a welcome message for the player to join"
+        "chi"       "是否显示玩家加入的欢迎信息"
+        "zho"       "是否顯示玩家加入的歡迎資訊"
+    }
+
+    "Menu Prefs SHOW_EXTRACTION_RANK"
+    {
+        "en"        "Whether to display the current map, the fastest/average time for the current route"
+        "chi"       "是否显示当前地图, 当前路线的最快/平均用时"
+        "zho"       "是否顯示當前地圖, 當前路線的最快/平均用時"
+    }
+
+    "Menu Prefs SHOW_OBJ_CHAIN_MD5"
+    {
+        "en"        "Whether to display the current round objective chain ID"
+        "chi"       "是否显示当前回合任务链ID"
+        "zho"       "是否顯示當前回合任務鏈ID"
+    }
+
+    "Menu Prefs SHOW_OBJ_START"
+    {
+        "en"        "Whether to display the ID of the current objective"
+        "chi"       "是否显示当前任务ID"
+        "zho"       "是否顯示當前任務ID"
+    }
+
+    "Menu Prefs SHOW_WAVE_MAX"
+    {
+        "en"        "Whether to display the maximum number of waves in the current round"
+        "chi"       "是否显示当前回合最大 wave 数"
+        "zho"       "是否顯示當前回合最大 wave 數"
+    }
+
+    "Menu Prefs SHOW_WAVE_START"
+    {
+        "en"        "Whether to display the current wave ID"
+        "chi"       "是否显示当前 wave ID"
+        "zho"       "是否顯示當前 wave ID"
+    }
+
+    "Menu Prefs SHOW_EXTRACTION_BEGIN"
+    {
+        "en"        "Whether the extraction start message is displayed"
+        "chi"       "是否显示撤离开始信息"
+        "zho"       "是否顯示撤離開始資訊"
+    }
+
+    "Menu Prefs SHOW_PLAYER_EXTRACTION"
+    {
+        "en"        "Whether to display player extraction information"
+        "chi"       "是否显示玩家撤离信息"
+        "zho"       "是否顯示玩家撤離資訊"
+    }
+
+    "Menu Prefs SHOW_WATERMELON_RESCURE"
+    {
+        "en"        "Whether to display the player save watermelon message"
+        "chi"       "是否显示玩家拯救西瓜信息"
+        "zho"       "是否顯示玩家拯救西瓜資訊"
     }
 }
