@@ -136,7 +136,7 @@ methodmap NRPrinter __nullable__
         public get()                            { return cv_printer_show_watermelon_rescue; }
     }
 
-    public void PrintPlayTime(int client) {
+    public void PrintWelcome(int client) {
         char sql_str[70];
         FormatEx(sql_str, sizeof(sql_str)
             // 52 - 2 + INT
@@ -144,7 +144,7 @@ methodmap NRPrinter __nullable__
             // 310 - 6 + INT * 3    // Custom Only
             // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id", steam_id, steam_id, steam_id
         );
-        nr_dbi.db.Query(CB_asyncGetPlayTime, sql_str, client, DBPrio_Normal); // 特定回调
+        nr_dbi.db.Query(CB_asyncPrintWelcome, sql_str, client, DBPrio_Normal); // 特定回调
     }
 
     /**
@@ -154,13 +154,13 @@ methodmap NRPrinter __nullable__
      * recommend: 300
      *
      */
-    public void PrintExtractedAvgTime() {
+    public void PrintExtractedInfo() {
         char sql_str[512];
         FormatEx(sql_str, sizeof(sql_str)
             , "SELECT IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) AS take_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted' ORDER BY take_time"
             , cv_printer_spawn_tolerance, 1.0 + cv_printer_spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
         );
-        nr_dbi.db.Query(CB_asyncGetExtractedRank, sql_str, _, DBPrio_Normal);   // 特定回调
+        nr_dbi.db.Query(CB_asyncPrintExtractedInfo, sql_str, _, DBPrio_Normal);   // 特定回调
     }
 
     public void PtintObjChainMD5(const char[] obj_chain_md5) {
@@ -183,7 +183,7 @@ methodmap NRPrinter __nullable__
             for(int i=1; i<=MaxClients; ++i) {
                 if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_EXTRACTION_BEGIN ) {
                     CPrintToChat(i, "%t", "Obj NMO OnExtractionBegin"
-                        , "Chat Head",                   objectiveChain.Get(objMgr.currentObjectiveIndex),   objMgr.currentObjectiveIndex + 1
+                        , "Chat Head",              objectiveChain.Get(objMgr.currentObjectiveIndex),   objMgr.currentObjectiveIndex + 1
                         , objectiveChain.Length,    take_time_minute,                                   take_time_seconds
                     );
                 }
@@ -291,14 +291,14 @@ public void PrintObjStart(DataPack data)
     data.ReadString(text, MAX_OBJNOTIFY_LEN);
     delete data;
     for(int i=1; i<=MaxClients; ++i) {
-        if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_WATERMELON_RESCURE ) {
+        if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_OBJ_START ) {
             CPrintToChat(i, "%t", "Obj NMO OnObjStart", "Chat Head", nr_objective.obj_id, nr_objective.obj_serial, nr_objective.obj_chain_len, text);
         }
     }
 }
 
 
-void CB_asyncGetPlayTime(Database db, DBResultSet results, const char[] error, int client)
+void CB_asyncPrintWelcome(Database db, DBResultSet results, const char[] error, int client)
 {
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
@@ -312,7 +312,7 @@ void CB_asyncGetPlayTime(Database db, DBResultSet results, const char[] error, i
         GetClientIP(client, ip, sizeof(ip));
         for(int i=1; i<=MaxClients; ++i)
         {
-            if( IsClientInGame(i) && global_clientPrefs.GetInt(i) & CLIENT_PREFS_BIT_SHOW_WELCOME)
+            if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_WELCOME )
             {
                 if( GeoipCountryEx(ip, country, sizeof(country), i) || GeoipRegion(ip, region, sizeof(region), i) )
                 {
@@ -327,11 +327,11 @@ void CB_asyncGetPlayTime(Database db, DBResultSet results, const char[] error, i
     }
     else
     {
-        LogError(PREFIX_DBI..."CB_asyncGetPlayTime | db:%d | result:%d | Error: %s |",  db != INVALID_HANDLE, results != INVALID_HANDLE, error);
+        LogError(PREFIX_DBI..."CB_asyncPrintWelcome | db:%d | result:%d | Error: %s |",  db != INVALID_HANDLE, results != INVALID_HANDLE, error);
     }
 }
 
-void CB_asyncGetExtractedRank(Database db, DBResultSet results, const char[] error, int client)
+void CB_asyncPrintExtractedInfo(Database db, DBResultSet results, const char[] error, int client)
 {
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
@@ -347,9 +347,9 @@ void CB_asyncGetExtractedRank(Database db, DBResultSet results, const char[] err
         {
             for(int i=1; i<=MaxClients; ++i)
             {
-                if( IsClientInGame(i) && global_clientPrefs.GetInt(i) & CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK)
+                if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK )
                 {
-                    CPrintToChat(i, "%t", "Obj Extracted_Taketime_NoOne", "Chat Head");
+                    CPrintToChat(i, "%t", "Obj Extracted_Info_NoOne", "Chat Head");
                 }
             }
         }
@@ -363,15 +363,15 @@ void CB_asyncGetExtractedRank(Database db, DBResultSet results, const char[] err
             float fast_time_seconds = fast_time % 60.0;
             for(int i=1; i<=MaxClients; ++i)
             {
-                if( IsClientInGame(i) && global_clientPrefs.GetInt(i) & CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK)
+                if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK )
                 {
-                    CPrintToChat(i, "%t", "Obj Extracted_Taketime", "Chat Head", protect_printer_extracted_rank.Length, fast_time_minute, fast_time_seconds, avg_time_minute, avg_time_seconds);
+                    CPrintToChat(i, "%t", "Obj Extracted_Info", "Chat Head", protect_printer_extracted_rank.Length, fast_time_minute, fast_time_seconds, avg_time_minute, avg_time_seconds);
                 }
             }
         }
     }
     else
     {
-        LogError(PREFIX_DBI..."CB_asyncGetExtractedRank | db:%d | result:%d | Error: %s |",  db != INVALID_HANDLE, results != INVALID_HANDLE, error);
+        LogError(PREFIX_DBI..."CB_asyncPrintExtractedInfo | db:%d | result:%d | Error: %s |",  db != INVALID_HANDLE, results != INVALID_HANDLE, error);
     }
 }

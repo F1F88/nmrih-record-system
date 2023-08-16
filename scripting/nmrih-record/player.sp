@@ -15,7 +15,7 @@
 #define         CLIENT_PREFS_BIT_SHOW_EXTRACTION_BEGIN      (1 << 7)
 #define         CLIENT_PREFS_BIT_SHOW_PLAYER_EXTRACTION     (1 << 8)
 #define         CLIENT_PREFS_BIT_SHOW_WATERMELON_RESCURE    (1 << 9)
-#define         CLIENT_PREFS_BIT_DEFAULT                    (1 << 0) + (1 << 1) + (1 << 2) + (1 << 3) + (1 << 4) + (1 << 5) | (1 << 6) | (1 << 7) | (1 << 8) | (1 << 9)
+#define         CLIENT_PREFS_BIT_DEFAULT                    (1 << 10) - 1
 
 enum ZOMBIE_TYPE {
     Zombie_Type_None = 0,
@@ -435,6 +435,7 @@ methodmap NRPlayerData __nullable__
         // this.aready_submit_data     // * 只在复活时设为 false
         // this.steam_id               // * 只在玩家加入和获取授权时覆盖
         // this.put_in_time            // * 只在加入时覆盖
+        // this.prefs                  // * 只在加入时覆盖
         // this.play_time              // * 当玩家在游戏中, 每隔一段时间都会更新
         this.spawn_time             = 0.0;
 

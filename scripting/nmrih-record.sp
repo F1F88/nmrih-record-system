@@ -301,7 +301,7 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
 
     if( nr_printer.show_extraction_time )
     {
-        nr_printer.PrintExtractedAvgTime();
+        nr_printer.PrintExtractedInfo();
     }
 }
 
@@ -402,6 +402,8 @@ public void OnClientPutInServer(int client)
     nr_player_data[client].prefs = global_clientPrefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
     nr_player_data[client].steam_id = GetSteamAccountID(client);    // 避免 OnClientAuthorized 可能触发更早产生的问题
 
+    LogMessage("%N | %d", client, nr_player_data[client].prefs);
+
     SDKHook(client, SDKHook_OnTakeDamage, On_player_TakeDamage);
 
     DataPack data = new DataPack();                                 // 记录玩家来源、玩家名字 | 输出玩家来源
@@ -470,7 +472,7 @@ Action Timer_OnClientPutInServer(Handle timer, DataPack data)
 
     if( IsClientInGame(client) && nr_player_data[client].steam_id != 0 && nr_printer.show_play_time )
     {
-        nr_printer.PrintPlayTime(client);
+        nr_printer.PrintWelcome(client);
     }
     return Plugin_Stop;
 }

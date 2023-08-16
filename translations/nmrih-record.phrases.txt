@@ -27,7 +27,7 @@
         "zho"       "{1}歡迎 {lightyellow}{2} {3}{default}的 {lightyellow}{4}{default} (在服時長{lightgreen}{5}{default}小時)"
     }
 
-    "Obj Extracted_Taketime_NoOne"
+    "Obj Extracted_Info_NoOne"
     {
         "#format"	"{1:t}"
         "en"        "{1}No one has ever managed to escape this route..."
@@ -35,7 +35,7 @@
         "zho"       "{1}截至目前，此路線沒有人能活著逃離..."
     }
 
-    "Obj Extracted_Taketime"
+    "Obj Extracted_Info"
     {
         "#format"	"{1:t},{2:d},{3:d},{4:.2f},{5:d},{6:.2f}"
         "en"        "{1}Total {lightgreen}{2}{default} people | {orangered}Fastest {lightgreen}{3}{default}m {lightgreen}{4}{default}s | {orangered}Average {lightgreen}{5}{default}m {lightgreen}{6}{default}s"

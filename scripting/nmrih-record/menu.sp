@@ -259,11 +259,19 @@ int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
         }
         case MenuAction_Select:
         {
-            char item_info[MAX_MAP_NAME_LEN];   // int - bit info
-            menu.GetItem(param2, item_info, MAX_MAP_NAME_LEN);
+            char item_info[16];   // int - bit info
+            menu.GetItem(param2, item_info, sizeof(item_info));
+
+            LogMessage("%d | %d | %d  ||||  %d | %d | %d | %d"
+                , CLIENT_PREFS_BIT_DEFAULT, nr_player_data[param1].prefs, nr_player_data[param1].prefs ^ StringToInt(item_info)
+                , IsClientInGame(param1)
+                , nr_player_data[param1].prefs & CLIENT_PREFS_BIT_SHOW_WELCOME
+                , IsClientInGame(param1) && nr_player_data[param1].prefs & CLIENT_PREFS_BIT_SHOW_WELCOME
+                , IsClientInGame(param1) && (nr_player_data[param1].prefs & CLIENT_PREFS_BIT_SHOW_WELCOME)
+            );
 
             nr_player_data[param1].prefs ^= StringToInt(item_info);
-            global_clientPrefs.SetInt(param1,  nr_player_data[param1].prefs);
+            global_clientPrefs.SetInt(param1, nr_player_data[param1].prefs);
 
             ShowMenu_ClientPrefs(param1, RoundToFloor(Logarithm(StringToFloat(item_info), 2.0)) / 7 * 7);
         }
