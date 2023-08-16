@@ -155,9 +155,9 @@
 
     "Menu Title Head"
     {
-        "en"        "[NR]"
-        "chi"       "[NR]"
-        "zho"       "[NR]"
+        "en"        "[NMRIH Record]"
+        "chi"       "[NMRIH Record]"
+        "zho"       "[NMRIH Record]"
     }
 
     "Menu Catalog title"
@@ -184,10 +184,10 @@
 
     "Menu Maps title"
     {
-        "#format"   "{1:s},{2:.0f},{3:.0f}"
-        "en"        "Map    By F1F88\n \n* Current Map: {1}\n* Extra penalty time {3}%% for spawn players after round begin {2} seconds\n "
-        "chi"       "地图    By F1F88\n \n* 当前地图 {1}\n* 回合开始 {2} 秒后复活的玩家额外罚时{3}%%\n "
-        "zho"       "地圖    By F1F88\n \n* 當前地圖 {1}\n* 回合開始 {2} 秒後復活的玩家額外罰時{3}%%\n "
+        "#format"   "{1:s},{2:s},{3:.0f},{4:.0f}"
+        "en"        "Map    By F1F88\n \n* Current Map: {1}\n* Current Route {2}\n* Extra penalty time {4}%% for spawn players after round begin {3} seconds\n "
+        "chi"       "地图    By F1F88\n \n* 当前地图 {1}\n* 当前路线 {2}\n* 回合开始 {3} 秒后复活的玩家额外罚时{4}%%\n "
+        "zho"       "地圖    By F1F88\n \n* 當前地圖 {1}\n* 当前路线 {2}\n* 回合開始 {3} 秒後復活的玩家額外罰時{4}%%\n "
     }
 
     "Menu Obj_chain title"
@@ -208,9 +208,9 @@
 
     "Menu Prefs title"
     {
-        "en"        "Preferences    By F1F88\n \n "
-        "chi"       "偏好设置    By F1F88\n \n "
-        "zho"       "偏好設定    By F1F88\n \n "
+        "en"        "    By F1F88\n \n- Preferences\n "
+        "chi"       "    By F1F88\n \n- 偏好设置\n "
+        "zho"       "    By F1F88\n \n- 偏好設定\n "
     }
 
     "Menu Prefs SHOW_MENU_TIME"
@@ -281,5 +281,29 @@
         "en"        "Whether to display the player save watermelon message"
         "chi"       "是否显示玩家拯救西瓜信息"
         "zho"       "是否顯示玩家拯救西瓜資訊"
+    }
+
+    "Cmd Top10_Empty"
+    {
+        "#format"	"{1:t},{2:s},{3:s}"
+        "en"        "{1}{orange}No data!{default}\nMap: {lightgreen}{2}{default}\nRoute: {lightgreen}{3}{default}"
+        "chi"       "{1}{orange}暂无数据!{default}\n地图: {lightgreen}{2}{default}\n路线: {lightgreen}{3}{default}"
+        "zho"       "{1}{orange}暫無數據!{default}\n地图: {lightgreen}{2}{default}\n路线: {lightgreen}{3}{default}"
+    }
+
+    "Cmd Top10_CurrentRound"
+    {
+        "#format"	"{1:t},{2:d},{3:s},{4:s}"
+        "en"        "{1}Total: {lightgreen} {2} {default}\nMap: {lightgreen}{3}{default}\nRoute: {lightgreen}{4}{default}"
+        "chi"       "{1}共计撤离{lightgreen} {2} {default}人\n地图: {lightgreen}{3}{default}\n路线: {lightgreen}{4}{default}"
+        "zho"       "{1}共計撤離{lightgreen} {2} {default}人\n地圖: {lightgreen}{3}{default}\n路線: {lightgreen}{4}{default}"
+    }
+
+    "Cmd Top10_Data"
+    {
+        "#format"	"{1:t},{2:d},{3:2d},{4:5.2f},{5:s}"
+        "en"        "{1}{orangered}No.{2} {lightgreen}{3}{default}m{lightgreen}{4}{default}s {5}"
+        "chi"       "{1}{orangered}No.{2} {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 {5}"
+        "zho"       "{1}{orangered}No.{2} {lightgreen}{3}{default}分{lightgreen}{4}{default}秒 {5}"
     }
 }

@@ -63,12 +63,14 @@ void OnConVarChange_Menu(ConVar convar, char[] old_value, char[] new_value)
     }
 }
 
-void LoadHook_Menu()
+void LoadCmd_Menu()
 {
-    RegConsoleCmd("sm_top",     Cmd_top, "show top menu");
-    RegConsoleCmd("sm_rank",    Cmd_top, "show top menu");
-    RegConsoleCmd("wr",         Cmd_top, "show top menu");
-    RegConsoleCmd("sm_wr",      Cmd_top, "show top menu");
+    RegConsoleCmd("sm_top",     Cmd_Menu_Catalog,   "show rank catalog menu");
+    RegConsoleCmd("sm_rank",    Cmd_Menu_Catalog,   "show rank catalog menu");
+    RegConsoleCmd("sm_wr",      Cmd_Menu_Catalog,   "show rank catalog menu");
+    RegConsoleCmd("sm_top10",   Cmd_Printer_top10,  "show top10");
+    RegConsoleCmd("sm_rank10",  Cmd_Printer_top10,  "show top10");
+    RegConsoleCmd("sm_wr10",    Cmd_Printer_top10,  "show top10");
 }
 
 void LoadClientPrefs_Menu()
@@ -78,10 +80,10 @@ void LoadClientPrefs_Menu()
         delete global_clientPrefs;
     }
     global_clientPrefs = new Cookie("nmrih-record clientPrefs", "nmrih-record clientPrefs", CookieAccess_Private);
-    SetCookieMenuItem(CustomCookieMenu_Menu, 0, "NMRIH Record (Top)");
+    SetCookieMenuItem(CustomCookieMenu_Menu, 0, "NMRIH Record");
 }
 
-Action Cmd_top(int client, int args)
+Action Cmd_Menu_Catalog(int client, int args)
 {
     if( ! cv_menu_top_enabled )
     {
@@ -137,7 +139,7 @@ int MenuHandler_Catalog(Menu menu, MenuAction action, int param1, int param2)
             {
                 Menu menu_maps;
                 private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
+                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
                 menu_maps.Display(param1, Menu_GetShowTime(param1));
             }
             else if( strcmp("Menu Catalog item_prefs", item_info) == 0 )
@@ -158,7 +160,7 @@ void ShowMenu_ClientPrefs(int client, int at=0)
 {
     Menu menu_cookie = new Menu(MenuHandler_Cookies, MenuAction_Select | MenuAction_Cancel);
     menu_cookie.ExitBackButton = true;
-    menu_cookie.SetTitle("%T - %T", "Menu Title Head", client, "Menu Prefs title", client);
+    menu_cookie.SetTitle("%T%T", "Menu Title Head", client, "Menu Prefs title", client);
 
     char item_info[16], item_display[128];
     bool item_flag;
@@ -272,6 +274,36 @@ int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
     return 0;
 }
 
+Action Cmd_Printer_top10(int client, int args)
+{
+    char key[MAX_MAP_NAME_LEN * 2];
+    FormatEx(key, MAX_MAP_NAME_LEN * 2, "%s%s%s", protect_map_map_name, KEY_MARK_CONNECTOR, protect_obj_chain_md5);
+    if( private_menu_all_datas.ContainsKey(key) )
+    {
+        ArrayList t_ranks;
+        rank_data t_rank_data;
+        private_menu_all_datas.GetValue(key, t_ranks);
+        int len = t_ranks.Length;
+
+        CPrintToChat(client, "%t", "Cmd Top10_CurrentRound", "Chat Head", len, protect_map_map_name, protect_obj_chain_md5);
+
+        int time_minute;
+        float time_seconds;
+        for(int i=0; i<10 && i<len; ++i)
+        {
+            t_ranks.GetArray(i, t_rank_data);
+            time_minute = RoundToFloor( t_rank_data.take_time / 60.0 );
+            time_seconds = t_rank_data.take_time % 60.0;
+            CPrintToChat(client, "%t", "Cmd Top10_Data", "Chat Head", i+1, time_minute, time_seconds, t_rank_data.name);
+        }
+    }
+    else
+    {
+        CPrintToChat(client, "%t", "Cmd Top10_Empty", "Chat Head", protect_map_map_name, protect_obj_chain_md5);
+    }
+    return Plugin_Handled;
+}
+
 int MenuHandler_Maps(Menu menu, MenuAction action, int param1, int param2)
 {
     switch( action )
@@ -312,7 +344,7 @@ int MenuHandler_Routes(Menu menu, MenuAction action, int param1, int param2)
                 {
                     Menu menu_maps;
                     private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
+                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
                     menu_maps.Display(param1, Menu_GetShowTime(param1));
                 }
             }

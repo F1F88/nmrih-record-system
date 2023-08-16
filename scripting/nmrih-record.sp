@@ -77,10 +77,6 @@ public void OnPluginStart()
     LoadGamedata();
     LoadHook_Objective();
 
-    // menu
-    LoadConVar_Menu();
-    LoadHook_Menu();
-
     // Player
     for(int client=1; client<=MaxClients; ++client)
     {
@@ -94,6 +90,10 @@ public void OnPluginStart()
     nr_printer = new NRPrinter();
     protect_printer_extracted_rank = new ArrayList();
     LoadConVar_Printer();
+
+    // menu
+    LoadConVar_Menu();
+    LoadCmd_Menu();
 
     if( LibraryExists("clientprefs") )
     {
@@ -229,6 +229,9 @@ void On_nmrih_practice_ending(Event event, const char[] name, bool dontBroadcast
     nr_round.practice = true;                                       // 记录回合
     nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), -1, "practice");
     nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
+
+    // strcopy(protect_obj_chain, MAX_MD5_LEN, NULL_STRING);
+    strcopy(protect_obj_chain_md5, MAX_MD5_LEN, NULL_STRING);
 }
 
 // 地图重置 (练习时间结束也会触发此事件. 用于标记回合结束, 记录新回合)
@@ -282,7 +285,8 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
     }
     else if( nr_map.map_type == MAP_TYPE_NMS )
     {
-        // FormatEx(protect_obj_chain_md5, MAX_MD5_LEN, "%s", protect_map_map_name);
+        // strcopy(protect_obj_chain, MAX_MD5_LEN, protect_map_map_name);
+        strcopy(protect_obj_chain_md5, MAX_MD5_LEN, protect_map_map_name);
 
         nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), nr_objective.wave_end, protect_map_map_name);
         nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
