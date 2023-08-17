@@ -17,7 +17,7 @@
 #include <smlib/crypt>
 
 #define INCLUDE_MANAGER
-#define NR_VERSION                  "v230817"
+#define NR_VERSION                  "v230818"
 
 Handle  global_timer;               // 全局通用 | 定时循环调用
 float   cv_global_timer_interval;
