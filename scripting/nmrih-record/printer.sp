@@ -144,7 +144,7 @@ methodmap NRPrinter __nullable__
             // 310 - 6 + INT * 3    // Custom Only
             // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id", steam_id, steam_id, steam_id
         );
-        nr_dbi.db.Query(CB_asyncPrintWelcome, sql_str, client, DBPrio_Normal); // 特定回调
+        nr_dbi.db.Query(CB_asyncPrintWelcome, sql_str, GetClientUserId(client), DBPrio_Normal); // 特定回调
     }
 
     /**
@@ -298,10 +298,16 @@ public void PrintObjStart(DataPack data)
 }
 
 
-void CB_asyncPrintWelcome(Database db, DBResultSet results, const char[] error, int client)
+void CB_asyncPrintWelcome(Database db, DBResultSet results, const char[] error, int user_id)
 {
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
+        int client = GetClientOfUserId(user_id);
+        if( ! IsClientInGame(client) )
+        {
+            return ;
+        }
+
         float play_time_hours = 0.0;
         if( results.FetchRow() )
         {
@@ -331,7 +337,7 @@ void CB_asyncPrintWelcome(Database db, DBResultSet results, const char[] error, 
     }
 }
 
-void CB_asyncPrintExtractedInfo(Database db, DBResultSet results, const char[] error, int client)
+void CB_asyncPrintExtractedInfo(Database db, DBResultSet results, const char[] error, any data)
 {
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
