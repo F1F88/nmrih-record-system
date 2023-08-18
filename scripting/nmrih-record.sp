@@ -595,22 +595,22 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         attacker_id = attacker;                                     // 不会超过 2048 (部分游戏可能是 4096)
         nr_player_data[victim].hurt_dmg_total += real_dmg;
 
-        if( StrContains(weapon_name, "shamblerzombie") )
+        if( StrContains(weapon_name, "shamblerzombie") != -1 )
         {
             nr_player_data[victim].hurt_cnt_shambler += 1;
             nr_player_data[victim].hurt_dmg_shambler += real_dmg;
         }
-        else if( StrContains(weapon_name, "runnerzombie") )
+        else if( StrContains(weapon_name, "runnerzombie") != -1 )
         {
             nr_player_data[victim].hurt_cnt_runner += 1;
             nr_player_data[victim].hurt_dmg_runner += real_dmg;
         }
-        else if( StrContains(weapon_name, "kidzombie") )
+        else if( StrContains(weapon_name, "kidzombie") != -1 )
         {
             nr_player_data[victim].hurt_cnt_kid += 1;
             nr_player_data[victim].hurt_dmg_kid += real_dmg;
         }
-        else if( StrContains(weapon_name, "turnedzombie") )
+        else if( StrContains(weapon_name, "turnedzombie") != -1 )
         {
             nr_player_data[victim].hurt_cnt_turned += 1;
             nr_player_data[victim].hurt_dmg_turned += real_dmg;
@@ -633,7 +633,7 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
 // 监听丧尸被攻击事件
 public void OnEntityCreated(int entity, const char[] classname)
 {
-    if( StrContains(classname, "nmc_nmrih") && StrContains(classname, "zombie") )
+    if( StrContains(classname, "npc_nmrih_") != -1 && StrContains(classname, "zombie") != -1 )
     {
         SDKHook(entity, SDKHook_OnTakeDamage, On_zombie_TakeDamage);
     }
@@ -669,19 +669,19 @@ Action On_zombie_TakeDamage(int victim, int& attacker, int& inflictor, float& da
 
         nr_player_data[attacker].inflict_dmg_total += real_dmg;
 
-        if( StrContains(victim_classname, "shamblerzombie") )
+        if( StrContains(victim_classname, "shamblerzombie") != -1 )
         {
             nr_player_data[attacker].inflict_dmg_shambler += real_dmg;
         }
-        else if( StrContains(victim_classname, "runnerzombie") )
+        else if( StrContains(victim_classname, "runnerzombie") != -1 )
         {
             nr_player_data[attacker].inflict_dmg_runner += real_dmg;
         }
-        else if( StrContains(victim_classname, "kidzombie") )
+        else if( StrContains(victim_classname, "kidzombie") != -1 )
         {
             nr_player_data[attacker].inflict_dmg_kid += real_dmg;
         }
-        else if( StrContains(victim_classname, "turnedzombie") )
+        else if( StrContains(victim_classname, "turnedzombie") != -1 )
         {
             nr_player_data[attacker].inflict_dmg_turned += real_dmg;
         }
@@ -689,21 +689,21 @@ Action On_zombie_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         if( IsValidEntity(inflictor) )
         {
             GetEntityClassname(inflictor, inflictor_classname, sizeof(inflictor_classname));
-            if( StrContains("me_", inflictor_classname) || StrContains("tool_", inflictor_classname) )
+            if( StrContains("me_", inflictor_classname) != -1 || StrContains("tool_", inflictor_classname) != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_melee += real_dmg;
             }
-            else if( StrContains("fa_", inflictor_classname) || StrContains("bow_", inflictor_classname) )
+            else if( StrContains("fa_", inflictor_classname) != -1 || StrContains("bow_", inflictor_classname) != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_firearm += real_dmg;
             }
             // | exp_grenade | exp_tnt | grenade_projectile | tnt_projectile |
-            else if( StrContains("grenade", inflictor_classname) || StrContains("tnt", inflictor_classname) )
+            else if( StrContains("grenade", inflictor_classname) != -1 || StrContains("tnt", inflictor_classname) != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_explode += real_dmg;
             }
             // | entityflame | exp_molotov | molotov_projectile |
-            else if( StrContains("flame", inflictor_classname) || StrContains("molotov", inflictor_classname) )
+            else if( StrContains("flame", inflictor_classname) != -1 || StrContains("molotov", inflictor_classname) != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_flame += real_dmg;
             }
@@ -778,22 +778,22 @@ public void On_item_given(Event event, char[] name, bool dontBroadcast)
     char classname[MAX_WEAPON_LEN];
     event.GetString("classname", classname, MAX_WEAPON_LEN);
 
-    if( StrContains(classname, "bandages") )
+    if( StrContains(classname, "bandages") != -1 )
     {
         nr_player_data[receiver].share_cnt_bandages += 1;
         nr_player_data[giver].receive_cnt_bandages += 1;
     }
-    else if( StrContains(classname, "first_aid") )
+    else if( StrContains(classname, "first_aid") != -1 )
     {
         nr_player_data[receiver].share_cnt_first_aid += 1;
         nr_player_data[giver].receive_cnt_first_aid += 1;
     }
-    else if( StrContains(classname, "pills") )
+    else if( StrContains(classname, "pills") != -1 )
     {
         nr_player_data[receiver].share_cnt_pills += 1;
         nr_player_data[giver].receive_cnt_pills += 1;
     }
-    else if( StrContains(classname, "gene_therapy") )
+    else if( StrContains(classname, "gene_therapy") != -1 )
     {
         nr_player_data[receiver].share_cnt_gene_therapy += 1;
         nr_player_data[giver].receive_cnt_gene_therapy += 1;

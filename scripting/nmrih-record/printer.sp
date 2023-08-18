@@ -303,7 +303,7 @@ void CB_asyncPrintWelcome(Database db, DBResultSet results, const char[] error, 
     if( db != INVALID_HANDLE && results != INVALID_HANDLE && error[0] == '\0' )
     {
         int client = GetClientOfUserId(user_id);
-        if( ! IsClientInGame(client) )
+        if( client && ! IsClientInGame(client) )
         {
             return ;
         }

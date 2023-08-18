@@ -69,7 +69,7 @@ methodmap NRDbi __nullable__
     public void setCharset(Database db) {
         char driver[MAX_DRIVER_LEN];
         db.Driver.GetIdentifier(driver, MAX_DRIVER_LEN);
-        if( StrContains(driver, "mysql", false) ) {
+        if( StrContains(driver, "mysql", false) != -1 ) {
             SQL_SetCharset(db, "utf8mb4");
         }
         else {
