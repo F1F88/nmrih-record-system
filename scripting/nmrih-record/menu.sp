@@ -7,38 +7,17 @@
 #define FIELD_NAME_ROUND_LEN                        "round_len"
 #define FIELD_NAME_ROUND_BEGIN_TIME                 "round_begin_time"
 #define FIELD_NAME_EXTRACTION_BEGIN_TIME            "extraction_begin_time"
+#define FIELD_NAME_SPAWN_TIME                       "spawn_time"
+#define FIELD_NAME_ENGINE_TIME                      "engine_time"
 #define FIELD_NAME_NAME                             "name"
 #define FIELD_NAME_STEAM_ID                         "steam_id"
 #define FIELD_NAME_COMPLETED                        "completed"
 #define FIELD_NAME_TAKE_TIME                        "take_time"
 
-#define KEY_MAPS                                    "maps"
-#define KEY_MARK_ROUND_DATA                         "data"
-#define KEY_MARK_ROUND_DATA_LEN                     "datalen"
-#define KEY_MARK_CONNECTOR                          "&"
-
-
-// 缓存撤离数据
-// [maps: routeList(ArrayList)] | [map_name: rankList(ArrayList)] | [map_name route: rankData(rank_data)]
-StringMap   private_menu_all_datas;
-
-// [map_name route datakey: roundData(any)]
-StringMap   private_menu_round_datas;
-
 
 // 缓存不同语言玩家可共用的菜单
 // [maps: mapList(Menu)] | [map_name: routeList(Menu)] | [map_name route: rankList(Menu)]
 StringMap   private_menu_public_menu;
-
-enum struct rank_data
-{
-    float   round_begin_time;
-    float   extraction_begin_time;
-    char    name[MAX_NAME_LENGTH];
-    int     steam_id;
-    bool    completed;
-    float   take_time;
-}
 
 bool        cv_menu_top_enabled;
 
@@ -52,12 +31,16 @@ void LoadConVar_Menu()
 void OnConVarChange_Menu(ConVar convar, char[] old_value, char[] new_value)
 {
     if( convar == INVALID_HANDLE )
+    {
         return ;
+    }
     char convar_name[64];
     convar.GetName(convar_name, sizeof(convar_name));
-    if( strcmp(convar_name, "sm_nr_menu_top_enabled") == 0 ) {
+    if( strcmp(convar_name, "sm_nr_menu_top_enabled") == 0 )
+    {
         cv_menu_top_enabled = convar.BoolValue;
-        if( cv_menu_top_enabled ) {
+        if( cv_menu_top_enabled )
+        {
             Menu_GetAllExtractedData();
         }
     }
@@ -75,11 +58,11 @@ void LoadCmd_Menu()
 
 void LoadClientPrefs_Menu()
 {
-    if( global_clientPrefs != INVALID_HANDLE )
+    if( protect_client_prefs != INVALID_HANDLE )
     {
-        delete global_clientPrefs;
+        delete protect_client_prefs;
     }
-    global_clientPrefs = new Cookie("nmrih-record clientPrefs", "nmrih-record clientPrefs", CookieAccess_Private);
+    protect_client_prefs = new Cookie("nmrih-record clientPrefs", "nmrih-record clientPrefs", CookieAccess_Private);
     SetCookieMenuItem(CustomCookieMenu_Menu, 0, "NMRIH Record");
 }
 
@@ -139,7 +122,7 @@ int MenuHandler_Catalog(Menu menu, MenuAction action, int param1, int param2)
             {
                 Menu menu_maps;
                 private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
+                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_player_spawn_tolerance, cv_player_spawn_penalty_factor * 100.0);
                 menu_maps.Display(param1, Menu_GetShowTime(param1));
             }
             else if( strcmp("Menu Catalog item_prefs", item_info) == 0 )
@@ -266,7 +249,7 @@ int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
             menu.GetItem(param2, item_info, sizeof(item_info));
 
             nr_player_data[param1].prefs ^= StringToInt(item_info);
-            global_clientPrefs.SetInt(param1, nr_player_data[param1].prefs);
+            protect_client_prefs.SetInt(param1, nr_player_data[param1].prefs);
 
             ShowMenu_ClientPrefs(param1, RoundToFloor(Logarithm(StringToFloat(item_info), 2.0)) / 7 * 7);
         }
@@ -278,11 +261,11 @@ Action Cmd_Printer_top10(int client, int args)
 {
     char key[MAX_MAP_NAME_LEN * 2];
     FormatEx(key, MAX_MAP_NAME_LEN * 2, "%s%s%s", protect_map_map_name, KEY_MARK_CONNECTOR, protect_obj_chain_md5);
-    if( private_menu_all_datas.ContainsKey(key) )
+    if( private_player_all_datas.ContainsKey(key) )
     {
         ArrayList t_ranks;
         rank_data t_rank_data;
-        private_menu_all_datas.GetValue(key, t_ranks);
+        private_player_all_datas.GetValue(key, t_ranks);
         int len = t_ranks.Length;
 
         CPrintToChat(client, "%t", "Cmd Top10_CurrentRound", "Chat Head", len, protect_map_map_name, protect_obj_chain_md5);
@@ -344,7 +327,7 @@ int MenuHandler_Routes(Menu menu, MenuAction action, int param1, int param2)
                 {
                     Menu menu_maps;
                     private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor * 100.0);
+                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_player_spawn_tolerance, cv_player_spawn_penalty_factor * 100.0);
                     menu_maps.Display(param1, Menu_GetShowTime(param1));
                 }
             }
@@ -404,17 +387,16 @@ int Menu_GetShowTime(int client)
  */
 public void Menu_GetAllExtractedData()
 {
-    // recommend: 1024
-    char sql_str[1024];
+    char sql_str[1024];     // recommend: 1024
     FormatEx(sql_str, sizeof(sql_str)
-        , "SELECT map_name, obj_chain_md5, round_len, round_begin_time, extraction_begin_time, name, d.steam_id, spawn_time<=round_begin_time completed, IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) take_time \
+        , "SELECT map_name, obj_chain_md5, round_len, round_begin_time, spawn_time, engine_time, name, d.steam_id, spawn_time<=round_begin_time completed, IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) take_time \
 FROM map_info m \
 INNER JOIN round_info r ON m.id=r.map_id \
 INNER JOIN round_data d ON r.id=d.round_id \
 INNER JOIN player_name pn ON d.steam_id = pn.steam_id \
 WHERE d.reason='extracted' \
 ORDER BY map_name, obj_chain_md5, take_time, name"
-        , cv_printer_spawn_tolerance, cv_printer_spawn_penalty_factor + 1.0
+        , cv_player_spawn_tolerance, cv_player_spawn_penalty_factor + 1.0
     );
 
     nr_dbi.db.Query(CB_asyncGetAllExtractedData, sql_str, _, DBPrio_Low); // 特定回调
@@ -426,15 +408,15 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
     {
         Free_all_datas();
 
-        private_menu_all_datas = new StringMap();
-        private_menu_round_datas = new StringMap();
+        private_player_all_datas = new StringMap();
+        private_player_round_datas = new StringMap();
         ArrayList   t_maps = new ArrayList(MAX_MAP_NAME_LEN);
         ArrayList   t_routes,                           t_ranks;
         int         t_field_index,                      round_len;
         char        map_name[MAX_MAP_NAME_LEN],         obj_chain_md5[MAX_MAP_NAME_LEN];
         char        key_ranks[MAX_MAP_NAME_LEN * 2],    key_round_len[MAX_MAP_NAME_LEN * 2];
 
-        private_menu_all_datas.SetValue(KEY_MAPS, t_maps);  // save
+        private_player_all_datas.SetValue(KEY_MAPS, t_maps);  // save
 
         while( results.FetchRow() )
         {
@@ -459,6 +441,12 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
             results.FieldNameToNum(FIELD_NAME_EXTRACTION_BEGIN_TIME, t_field_index);
             t_rank_data.extraction_begin_time = results.FetchFloat(t_field_index);
 
+            results.FieldNameToNum(FIELD_NAME_SPAWN_TIME, t_field_index);
+            t_rank_data.spawn_time = results.FetchFloat(t_field_index);
+
+            results.FieldNameToNum(FIELD_NAME_ENGINE_TIME, t_field_index);
+            t_rank_data.engine_time = results.FetchFloat(t_field_index);
+
             results.FieldNameToNum(FIELD_NAME_NAME, t_field_index);
             results.FetchString(t_field_index, t_rank_data.name, MAX_NAME_LENGTH);
 
@@ -472,13 +460,13 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
             t_rank_data.take_time = results.FetchFloat(t_field_index);
 
             // save
-            if( private_menu_all_datas.ContainsKey(map_name) )
+            if( private_player_all_datas.ContainsKey(map_name) )
             {
-                private_menu_all_datas.GetValue(map_name, t_routes);        // 读取当前地图的所有路线
+                private_player_all_datas.GetValue(map_name, t_routes);        // 读取当前地图的所有路线
 
-                if( private_menu_all_datas.ContainsKey(key_ranks) )
+                if( private_player_all_datas.ContainsKey(key_ranks) )
                 {
-                    private_menu_all_datas.GetValue(key_ranks, t_ranks);    // 读取当前路线排行榜
+                    private_player_all_datas.GetValue(key_ranks, t_ranks);    // 读取当前路线排行榜
                     t_ranks.PushArray(t_rank_data);
                 }
                 else
@@ -488,8 +476,8 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
                     t_routes.PushString(obj_chain_md5);
                     t_ranks.PushArray(t_rank_data);
 
-                    private_menu_all_datas.SetValue(key_ranks, t_ranks);
-                    private_menu_round_datas.SetValue(key_round_len, round_len);
+                    private_player_all_datas.SetValue(key_ranks, t_ranks);
+                    private_player_round_datas.SetValue(key_round_len, round_len);
                 }
             }
             else
@@ -501,9 +489,9 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
                 t_routes.PushString(obj_chain_md5);
                 t_ranks.PushArray(t_rank_data);
 
-                private_menu_all_datas.SetValue(map_name, t_routes);
-                private_menu_all_datas.SetValue(key_ranks, t_ranks);
-                private_menu_round_datas.SetValue(key_round_len, round_len);
+                private_player_all_datas.SetValue(map_name, t_routes);
+                private_player_all_datas.SetValue(key_ranks, t_ranks);
+                private_player_round_datas.SetValue(key_round_len, round_len);
             }
         }
         Free_all_public_menus();
@@ -517,9 +505,9 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
 
 void Free_all_datas()
 {
-    if( private_menu_all_datas != INVALID_HANDLE )
+    if( private_player_all_datas != INVALID_HANDLE )
     {
-        StringMapSnapshot keys = private_menu_all_datas.Snapshot();
+        StringMapSnapshot keys = private_player_all_datas.Snapshot();
         int len_keys = keys.Length;
         char key_name[MAX_MAP_NAME_LEN * 2];
         ArrayList tmp;
@@ -527,18 +515,18 @@ void Free_all_datas()
         for(int i=0; i<len_keys; ++i)
         {
             keys.GetKey(i, key_name, MAX_MAP_NAME_LEN * 2);
-            private_menu_all_datas.GetValue(key_name, tmp);
+            private_player_all_datas.GetValue(key_name, tmp);
             if( tmp != INVALID_HANDLE )
             {
                 delete tmp;
             }
         }
-        delete private_menu_all_datas;
+        delete private_player_all_datas;
     }
 
-    if( private_menu_round_datas != INVALID_HANDLE )
+    if( private_player_round_datas != INVALID_HANDLE )
     {
-        delete private_menu_round_datas;
+        delete private_player_round_datas;
     }
 }
 
@@ -551,7 +539,7 @@ void Traversal_AllData_CreatePublicMenu()
     char map_name[MAX_MAP_NAME_LEN], obj_chain_md5[MAX_MAP_NAME_LEN];
     char key_ranks[MAX_MAP_NAME_LEN * 2], key_round_len[MAX_MAP_NAME_LEN * 2];
 
-    private_menu_all_datas.GetValue(KEY_MAPS, t_maps);
+    private_player_all_datas.GetValue(KEY_MAPS, t_maps);
     len_t_maps = t_maps.Length;
 
     private_menu_public_menu = new StringMap();
@@ -566,7 +554,7 @@ void Traversal_AllData_CreatePublicMenu()
     {
         t_maps.GetString(i, map_name, MAX_MAP_NAME_LEN);
 
-        private_menu_all_datas.GetValue(map_name, t_routes);
+        private_player_all_datas.GetValue(map_name, t_routes);
         len_t_routes = t_routes.Length;
 
         menu_maps.AddItem(map_name, map_name, ITEMDRAW_DEFAULT);
@@ -587,11 +575,11 @@ void Traversal_AllData_CreatePublicMenu()
             t_routes.GetString(j, obj_chain_md5, MAX_MAP_NAME_LEN);
 
             FormatEx(key_ranks, MAX_MAP_NAME_LEN * 2, "%s%s%s", map_name, KEY_MARK_CONNECTOR, obj_chain_md5);
-            private_menu_all_datas.GetValue(key_ranks, t_ranks);
+            private_player_all_datas.GetValue(key_ranks, t_ranks);
             len_t_ranks = t_ranks.Length;
 
             FormatEx(key_round_len, MAX_MAP_NAME_LEN * 2, "%s%s%s", key_ranks, KEY_MARK_CONNECTOR, KEY_MARK_ROUND_DATA_LEN);
-            private_menu_round_datas.GetValue(key_round_len, round_len);
+            private_player_round_datas.GetValue(key_round_len, round_len);
 
 
             menu_routes.AddItem(key_ranks, obj_chain_md5, ITEMDRAW_DEFAULT);

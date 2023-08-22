@@ -13,9 +13,7 @@ bool        cv_printer_show_play_time
             , cv_printer_show_player_extraction
             , cv_printer_show_watermelon_rescue;
 
-float       cv_printer_delay_show_play_time
-            , cv_printer_spawn_tolerance
-            , cv_printer_spawn_penalty_factor;
+float       cv_printer_delay_show_play_time;
 
 void LoadConVar_Printer()
 {
@@ -40,10 +38,6 @@ void LoadConVar_Printer()
     cv_printer_show_player_extraction = convar.BoolValue;
     (convar = CreateConVar("sm_nr_printer_show_watermelon_rescue",  "0",    "西瓜救援成功时, 输出相关信息")).AddChangeHook(OnConVarChange_Printer);
     cv_printer_show_watermelon_rescue = convar.BoolValue;
-    (convar = CreateConVar("sm_nr_printer_spawn_tolerance",         "10.0", "round_begin 后这么多秒内复活的玩家在计算通关时长时将被罚时")).AddChangeHook(OnConVarChange_Menu);
-    cv_printer_spawn_tolerance = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_printer_spawn_penalty_factor",    "0.25", "额外罚时百分比. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Menu);
-    cv_printer_spawn_penalty_factor = convar.FloatValue;
 }
 
 void OnConVarChange_Printer(ConVar convar, char[] old_value, char[] new_value)
@@ -81,12 +75,6 @@ void OnConVarChange_Printer(ConVar convar, char[] old_value, char[] new_value)
     }
     else if( strcmp(convar_name, "sm_nr_printer_show_watermelon_rescue") == 0 ) {
         cv_printer_show_watermelon_rescue = convar.BoolValue;
-    }
-    else if( strcmp(convar_name, "sm_nr_printer_spawn_tolerance") == 0 ) {
-        cv_printer_spawn_tolerance = convar.FloatValue;
-    }
-    else if( strcmp(convar_name, "sm_nr_printer_spawn_penalty_factor") == 0 ) {
-        cv_printer_spawn_penalty_factor = convar.FloatValue;
     }
 }
 
@@ -141,8 +129,6 @@ methodmap NRPrinter __nullable__
         FormatEx(sql_str, sizeof(sql_str)
             // 52 - 2 + INT
             , "SELECT play_time FROM player_stats WHERE steam_id=%d LIMIT 1", nr_player_data[client].steam_id
-            // 310 - 6 + INT * 3    // Custom Only
-            // , "SELECT steam_id, SUM(play_time) play_time FROM (SELECT steam_id, play_time FROM nr_server1.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server2.player_stats WHERE steam_id=%d UNION ALL SELECT steam_id, play_time FROM nr_server3.player_stats WHERE steam_id=%d) t GROUP BY steam_id", steam_id, steam_id, steam_id
         );
         nr_dbi.db.Query(CB_asyncPrintWelcome, sql_str, GetClientUserId(client), DBPrio_Normal); // 特定回调
     }
@@ -158,7 +144,7 @@ methodmap NRPrinter __nullable__
         char sql_str[512];
         FormatEx(sql_str, sizeof(sql_str)
             , "SELECT IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) AS take_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted' ORDER BY take_time"
-            , cv_printer_spawn_tolerance, 1.0 + cv_printer_spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
+            , cv_player_spawn_tolerance, 1.0 + cv_player_spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
         );
         nr_dbi.db.Query(CB_asyncPrintExtractedInfo, sql_str, _, DBPrio_Normal);   // 特定回调
     }
@@ -226,7 +212,7 @@ methodmap NRPrinter __nullable__
 
     public void PrintPlayerExtraction(const int client, const float engine_time) {
         float take_time = engine_time - nr_round.begin_time;
-        float penalty_time = nr_player_data[client].spawn_time <= (nr_round.begin_time + cv_printer_spawn_tolerance) ? 0.0 : take_time * cv_printer_spawn_penalty_factor;
+        float penalty_time = nr_player_data[client].spawn_time <= (nr_round.begin_time + cv_player_spawn_tolerance) ? 0.0 : take_time * cv_player_spawn_penalty_factor;
         float final_time = take_time + penalty_time;
 
         int rank_id = 0;
@@ -250,8 +236,7 @@ methodmap NRPrinter __nullable__
 
         int   take_time_minute  = RoundToFloor( final_time / 60.0 );
         float take_time_seconds = final_time % 60.0;
-        if( penalty_time == 0.0 )
-        {
+        if( penalty_time == 0.0 ) {
             // "[提示]{name} 撤离成功! 用时: {green}{min}:{sec}{default}  | 排名: {green}{5}{default}"
             for(int i=1; i<=MaxClients; ++i) {
                 if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_PLAYER_EXTRACTION ) {
@@ -259,8 +244,7 @@ methodmap NRPrinter __nullable__
                 }
             }
         }
-        else
-        {
+        else {
             int   penalty_minute    = RoundToFloor( penalty_time / 60.0 );
             float penalty_seconds   = penalty_time % 60.0;
             // "[提示]{name} 撤离成功! 用时: {green}{min}:{sec}{default}  | 排名: {green}{5}{default}"
@@ -290,8 +274,10 @@ public void PrintObjStart(DataPack data)
     data.Reset();
     data.ReadString(text, MAX_OBJNOTIFY_LEN);
     delete data;
-    for(int i=1; i<=MaxClients; ++i) {
-        if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_OBJ_START ) {
+    for(int i=1; i<=MaxClients; ++i)
+    {
+        if( IsClientInGame(i) && nr_player_data[i].prefs & CLIENT_PREFS_BIT_SHOW_OBJ_START )
+        {
             CPrintToChat(i, "%t", "Obj NMO OnObjStart", "Chat Head", nr_objective.obj_id, nr_objective.obj_serial, nr_objective.obj_chain_len, text);
         }
     }

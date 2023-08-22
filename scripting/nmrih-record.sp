@@ -17,11 +17,11 @@
 #include <smlib/crypt>
 
 #define INCLUDE_MANAGER
-#define NR_VERSION                  "v230818"
+#define NR_VERSION                  "v1.0.0"
+
 
 Handle  global_timer;               // 全局通用 | 定时循环调用
 float   cv_global_timer_interval;
-Cookie  global_clientPrefs;
 
 
 #include <dbi>
@@ -403,7 +403,7 @@ public void OnClientPutInServer(int client)
 {
     nr_player_data[client].cleanup_stats();                         // 保证玩家统计数据已清空
     nr_player_data[client].put_in_time = GetTime();
-    nr_player_data[client].prefs = global_clientPrefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
+    nr_player_data[client].prefs = protect_client_prefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
     nr_player_data[client].steam_id = GetSteamAccountID(client);    // 避免 OnClientAuthorized 可能触发更早产生的问题
 
     LogMessage("%N | %d", client, nr_player_data[client].prefs);
