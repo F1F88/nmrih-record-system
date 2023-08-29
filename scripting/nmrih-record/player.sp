@@ -91,10 +91,10 @@ Cookie      protect_client_prefs;
 
 // 缓存撤离数据
 // [maps: routeList(ArrayList)] | [map_name: rankList(ArrayList)] | [map_name route: rankData(rank_data)]
-StringMap   private_player_all_datas;
+StringMap   protect_player_all_datas;
 
 // [map_name route datakey: roundData(any)]
-StringMap   private_player_round_datas;
+StringMap   protect_player_round_datas;
 
 enum struct rank_data
 {
@@ -110,21 +110,21 @@ enum struct rank_data
 
 float           cv_player_ff_factor
                 , cv_player_bleedout_dmg
+                , cv_player_connected_delay_time
                 , cv_player_play_time_interval
-                , cv_player_spawn_tolerance
+                , cv_player_spawn_tolerance_time
                 , cv_player_spawn_penalty_factor;
-
-int             private_player_prefs[MAXPLAYERS + 1];
-int             private_player_steam_id[MAXPLAYERS + 1]
-                , private_player_put_in_time[MAXPLAYERS + 1];
 
 float           private_player_spawn_time[MAXPLAYERS + 1]
                 , private_player_play_time[MAXPLAYERS + 1];
 
 bool            private_player_aready_submit_data[MAXPLAYERS + 1];
 
-int
-                private_player_taken_cnt_pills[MAXPLAYERS + 1]
+int             private_player_prefs[MAXPLAYERS + 1]
+                , private_player_steam_id[MAXPLAYERS + 1]
+                , private_player_put_in_time[MAXPLAYERS + 1]
+
+                , private_player_taken_cnt_pills[MAXPLAYERS + 1]
                 , private_player_taken_cnt_gene_therapy[MAXPLAYERS + 1]
                 , private_player_effect_cnt_gene_therapy[MAXPLAYERS + 1]
 
@@ -510,8 +510,20 @@ methodmap NRPlayerFunc __nullable__
         public get()                    { return cv_player_bleedout_dmg; }
     }
 
+    property float delay_show_play_time {
+        public get()                    { return cv_player_connected_delay_time; }
+    }
+
     property float play_time_interval {
         public get()                    { return cv_player_play_time_interval; }
+    }
+
+    property float spawn_tolerance_time {
+        public get()                    { return cv_player_spawn_tolerance_time; }
+    }
+
+    property float spawn_penalty_factor {
+        public get()                    { return cv_player_spawn_penalty_factor; }
     }
 
     /**
@@ -638,13 +650,14 @@ void LoadConVar_Player()
     cv_player_ff_factor = convar.FloatValue;
     (convar = FindConVar("sv_bleedout_damage")).AddChangeHook(OnConVarChange_Player);
     cv_player_bleedout_dmg = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_player_play_time_interval",   "60.0",             "更新玩家游玩时长最短间隔(秒) | 建议为 sm_nr_global_timer_interval 的整数倍")).AddChangeHook(OnConVarChange_Player);
+    (convar = CreateConVar("sm_nr_player_connected_delay_time",     "5.0",  "玩家加入时, 延迟多少秒处理、记录、输出数据(立即处理容易出现 Error, 不建议修改)")).AddChangeHook(OnConVarChange_Player);
+    cv_player_connected_delay_time = convar.FloatValue;
+    (convar = CreateConVar("sm_nr_player_play_time_interval",       "60.0", "更新玩家游玩时长最短间隔(秒) | 建议为 sm_nr_global_timer_interval 的整数倍")).AddChangeHook(OnConVarChange_Player);
     cv_player_play_time_interval = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_global_spawn_tolerance",          "10.0", "round_begin 后这么多秒内复活的玩家在计算通关时长时将被罚时")).AddChangeHook(OnConVarChange_Menu);
-    cv_player_spawn_tolerance = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_global_spawn_penalty_factor",     "0.25", "额外罚时百分比. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Menu);
+    (convar = CreateConVar("sm_nr_player_spawn_tolerance_time",     "10.0", "round_begin 后这么多秒内复活的玩家在计算通关时长时将被罚时")).AddChangeHook(OnConVarChange_Player);
+    cv_player_spawn_tolerance_time = convar.FloatValue;
+    (convar = CreateConVar("sm_nr_player_spawn_penalty_factor",     "0.25", "额外罚时百分比. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Player);
     cv_player_spawn_penalty_factor = convar.FloatValue;
-    CreateConVar("sm_nr_version", NR_VERSION);
 }
 
 void LoadHook_Player()
@@ -680,13 +693,16 @@ void OnConVarChange_Player(ConVar convar, char[] old_value, char[] new_value)
     else if( strcmp(convar_name, "sv_bleedout_damage") == 0 ) {
         cv_player_bleedout_dmg = convar.FloatValue;
     }
+    else if( strcmp(convar_name, "sm_nr_player_connected_delay_time") == 0 ) {
+        cv_player_connected_delay_time = convar.FloatValue;
+    }
     else if( strcmp(convar_name, "sm_nr_player_play_time_interval") == 0 ) {
         cv_player_play_time_interval = convar.FloatValue;
     }
-    else if( strcmp(convar_name, "sm_nr_printer_spawn_tolerance") == 0 ) {
-        cv_player_spawn_tolerance = convar.FloatValue;
+    else if( strcmp(convar_name, "sm_nr_player_spawn_tolerance_time") == 0 ) {
+        cv_player_spawn_tolerance_time = convar.FloatValue;
     }
-    else if( strcmp(convar_name, "sm_nr_printer_spawn_penalty_factor") == 0 ) {
+    else if( strcmp(convar_name, "sm_nr_player_spawn_penalty_factor") == 0 ) {
         cv_player_spawn_penalty_factor = convar.FloatValue;
     }
 }

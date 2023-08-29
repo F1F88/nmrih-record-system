@@ -1,30 +1,28 @@
 // Todo: 在地图、回合信息记录失败时停止记录
 // Todo: 补充使用绷带和医疗包事件及记录字段
-// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误 || 删除 manager 工厂
+// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误 (推测已修复, 造成原因: 没有正确设置驱动及编码)
+// Todo: 删除 manager 工厂
+// Todo: Top菜单支持下一级查看完整通关数据
 
 #pragma newdecls required
 #pragma semicolon 1
 
+#define  INCLUDE_MANAGER
+#define  NR_VERSION                 "v1.0.1"
+
 #include <sourcemod>
+#include <dbi>
 #include <geoip>
 #include <sdktools>
 #include <sdkhooks>
-#include <multicolors>
 
-#undef  REQUIRE_EXTENSIONS
+#undef   REQUIRE_EXTENSIONS
 #include <clientprefs>
-#define REQUIRE_EXTENSIONS
+#define  REQUIRE_EXTENSIONS
+
+#include <multicolors>
 #include <smlib/crypt>
 
-#define INCLUDE_MANAGER
-#define NR_VERSION                  "v1.0.0"
-
-
-Handle  global_timer;               // 全局通用 | 定时循环调用
-float   cv_global_timer_interval;
-
-
-#include <dbi>
 #include "nmrih-record/dbi.sp"
 #include "nmrih-record/map.sp"
 #include "nmrih-record/round.sp"
@@ -34,9 +32,13 @@ float   cv_global_timer_interval;
 #include "nmrih-record/printer.sp"
 #include "nmrih-record/menu.sp"
 
-#if defined INCLUDE_MANAGER
+#if      defined INCLUDE_MANAGER
 #include "nmrih-record/manager.sp"
 #endif
+
+
+Handle   global_timer;              // 全局通用 | 定时循环调用
+float    cv_global_timer_interval;
 
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
@@ -403,15 +405,13 @@ public void OnClientPutInServer(int client)
 {
     nr_player_data[client].cleanup_stats();                         // 保证玩家统计数据已清空
     nr_player_data[client].put_in_time = GetTime();
-    nr_player_data[client].prefs = protect_client_prefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
+    nr_player_data[client].prefs = GetClientPrefsIntValue(client);
     nr_player_data[client].steam_id = GetSteamAccountID(client);    // 避免 OnClientAuthorized 可能触发更早产生的问题
-
-    LogMessage("%N | %d", client, nr_player_data[client].prefs);
 
     SDKHook(client, SDKHook_OnTakeDamage, On_player_TakeDamage);
 
     DataPack data = new DataPack();                                 // 记录玩家来源、玩家名字 | 输出玩家来源
-    CreateDataTimer(nr_printer.delay_show_play_time, Timer_OnClientPutInServer, data, TIMER_DATA_HNDL_CLOSE);
+    CreateDataTimer(nr_player_func.delay_show_play_time, Timer_OnClientPutInServer, data, TIMER_DATA_HNDL_CLOSE);
 
     data.WriteCell(client);
 
@@ -595,27 +595,28 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         attacker_id = attacker;                                     // 不会超过 2048 (部分游戏可能是 4096)
         nr_player_data[victim].hurt_dmg_total += real_dmg;
 
-        if( StrContains(weapon_name, "shamblerzombie") != -1 )
+        GetEntityClassname(inflictor, weapon_name, MAX_WEAPON_LEN);
+
+        if( ! strcmp(weapon_name, "npc_nmrih_shamblerzombie") )
         {
             nr_player_data[victim].hurt_cnt_shambler += 1;
             nr_player_data[victim].hurt_dmg_shambler += real_dmg;
         }
-        else if( StrContains(weapon_name, "runnerzombie") != -1 )
+        else if( ! strcmp(weapon_name, "npc_nmrih_runnerzombie") )
         {
             nr_player_data[victim].hurt_cnt_runner += 1;
             nr_player_data[victim].hurt_dmg_runner += real_dmg;
         }
-        else if( StrContains(weapon_name, "kidzombie") != -1 )
+        else if( ! strcmp(weapon_name, "npc_nmrih_kidzombie") )
         {
             nr_player_data[victim].hurt_cnt_kid += 1;
             nr_player_data[victim].hurt_dmg_kid += real_dmg;
         }
-        else if( StrContains(weapon_name, "turnedzombie") != -1 )
+        else if( ! strcmp(weapon_name, "npc_nmrih_turnedzombie") )
         {
             nr_player_data[victim].hurt_cnt_turned += 1;
             nr_player_data[victim].hurt_dmg_turned += real_dmg;
         }
-        GetEntityClassname(inflictor, weapon_name, MAX_WEAPON_LEN);
     }
 
 #if defined INCLUDE_MANAGER
@@ -624,8 +625,10 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 #endif
 
-    // PrintToChatAll("pp | vic:%d | atc:%d | wap:%s | dmg: %f | rdmg: %d", victim, attacker, weapon_name, damage, real_dmg);
-    // LogMessage("pl | vic:%d | atc:%d | wap:%s | dmg: %f | rdmg: %d", victim, attacker, weapon_name, damage, real_dmg);
+    // char atc_name[32];
+    // GetEdictClassname(attacker, atc_name, 32);
+    // PrintToChatAll("pp | vic:%d | atc: %d | atc:%s | wap:%s | dmg: %f | rdmg: %d", victim, attacker, atc_name, weapon_name, damage, real_dmg);
+    // LogMessage("pl | vic:%d | atc: %d | atc: %s | wap:%s | dmg: %f | rdmg: %d", victim, attacker, atc_name, weapon_name, damage, real_dmg);
 
     return Plugin_Continue;
 }
@@ -650,10 +653,10 @@ Action On_zombie_TakeDamage(int victim, int& attacker, int& inflictor, float& da
             return Plugin_Continue;
         }
 
-        int real_dmg;
-        char victim_classname[32], inflictor_classname[32];
+        char victim_classname[32];
         GetEntityClassname(victim, victim_classname, sizeof(victim_classname));
 
+        int real_dmg;
         if( FloatCompare(damage, float(victim_hp)) == 1 )
         {
             real_dmg = victim_hp;
@@ -666,56 +669,54 @@ Action On_zombie_TakeDamage(int victim, int& attacker, int& inflictor, float& da
                 real_dmg = 1;
             }
         }
-
         nr_player_data[attacker].inflict_dmg_total += real_dmg;
 
-        if( StrContains(victim_classname, "shamblerzombie") != -1 )
+        if( ! strcmp(victim_classname, "npc_nmrih_shamblerzombie") )
         {
             nr_player_data[attacker].inflict_dmg_shambler += real_dmg;
         }
-        else if( StrContains(victim_classname, "runnerzombie") != -1 )
+        else if( ! strcmp(victim_classname, "npc_nmrih_runnerzombie") )
         {
             nr_player_data[attacker].inflict_dmg_runner += real_dmg;
         }
-        else if( StrContains(victim_classname, "kidzombie") != -1 )
+        else if( ! strcmp(victim_classname, "npc_nmrih_kidzombie") )
         {
             nr_player_data[attacker].inflict_dmg_kid += real_dmg;
         }
-        else if( StrContains(victim_classname, "turnedzombie") != -1 )
+        else if( ! strcmp(victim_classname, "npc_nmrih_turnedzombie") )
         {
             nr_player_data[attacker].inflict_dmg_turned += real_dmg;
         }
 
         if( IsValidEntity(inflictor) )
         {
+            char inflictor_classname[32];
             GetEntityClassname(inflictor, inflictor_classname, sizeof(inflictor_classname));
-            if( StrContains("me_", inflictor_classname) != -1 || StrContains("tool_", inflictor_classname) != -1 )
+            if( StrContains(inflictor_classname, "me_") != -1 || StrContains(inflictor_classname, "tool_") != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_melee += real_dmg;
             }
-            else if( StrContains("fa_", inflictor_classname) != -1 || StrContains("bow_", inflictor_classname) != -1 )
+            else if( StrContains(inflictor_classname, "fa_") != -1 || StrContains(inflictor_classname, "bow_") != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_firearm += real_dmg;
             }
             // | exp_grenade | exp_tnt | grenade_projectile | tnt_projectile |
-            else if( StrContains("grenade", inflictor_classname) != -1 || StrContains("tnt", inflictor_classname) != -1 )
+            else if( StrContains(inflictor_classname, "grenade") != -1 || StrContains(inflictor_classname, "tnt") != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_explode += real_dmg;
             }
             // | entityflame | exp_molotov | molotov_projectile |
-            else if( StrContains("flame", inflictor_classname) != -1 || StrContains("molotov", inflictor_classname) != -1 )
+            else if( StrContains(inflictor_classname, "flame") != -1 || StrContains(inflictor_classname, "molotov") != -1 )
             {
                 nr_player_data[attacker].inflict_dmg_flame += real_dmg;
             }
         }
 
-        // char weapon_name[32];
-        // if( IsValidEntity(inflictor) )
-        // {
-        //     GetEntityClassname(inflictor, weapon_name, sizeof(weapon_name));
-        // }
-        // PrintToChatAll("zp | vic:%d | atc:%d | wap:%s | dmg: %f | rdmg: %d", victim, attacker, weapon_name, damage, real_dmg);
-        // LogMessage("zl | vic:%d | atc:%d | wap:%s | dmg: %f | rdmg: %d", victim, attacker, weapon_name, damage, real_dmg);
+        // char vic_name[32], weapon_name[32];
+        // GetEntityClassname(victim, vic_name, sizeof(vic_name));
+        // GetEntityClassname(inflictor, weapon_name, sizeof(weapon_name));
+        // PrintToChatAll("zp | vic:%s | vic: %d | atc:%d | wap:%s | dmg: %f | rdmg: %d", vic_name, victim, attacker, weapon_name, damage, real_dmg);
+        // LogMessage("zl | vic:%s | vic: %d | atc:%d | wap:%s | dmg: %f | rdmg: %d", vic_name, victim, attacker, weapon_name, damage, real_dmg);
 
     }
     return Plugin_Continue;

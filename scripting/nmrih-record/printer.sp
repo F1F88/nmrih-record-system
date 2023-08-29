@@ -13,15 +13,11 @@ bool        cv_printer_show_play_time
             , cv_printer_show_player_extraction
             , cv_printer_show_watermelon_rescue;
 
-float       cv_printer_delay_show_play_time;
-
 void LoadConVar_Printer()
 {
     ConVar convar;
     (convar = CreateConVar("sm_nr_printer_show_play_time",          "0",    "玩家加入时, 输出来源、在本服游玩时长")).AddChangeHook(OnConVarChange_Printer);
     cv_printer_show_play_time = convar.BoolValue;
-    (convar = CreateConVar("sm_nr_printer_delay_show_play_time",    "5.0",  "玩家加入多少秒后输出、记录数据")).AddChangeHook(OnConVarChange_Printer);
-    cv_printer_delay_show_play_time = convar.FloatValue;
     (convar = CreateConVar("sm_nr_printer_show_extraction_time",    "0",    "回合开始时, 输出本回合最短/平均撤离耗时")).AddChangeHook(OnConVarChange_Printer);
     cv_printer_show_extraction_time = convar.BoolValue;
     (convar = CreateConVar("sm_nr_printer_show_obj_chain_md5",      "0",    "回合开始时, 输出本回合任务链的 MD5 Hash 值 (可用于区分不同路线)")).AddChangeHook(OnConVarChange_Printer);
@@ -48,9 +44,6 @@ void OnConVarChange_Printer(ConVar convar, char[] old_value, char[] new_value)
     convar.GetName(convar_name, sizeof(convar_name));
     if( strcmp(convar_name, "sm_nr_printer_show_play_time") == 0 ) {
         cv_printer_show_play_time = convar.BoolValue;
-    }
-    else if( strcmp(convar_name, "sm_nr_printer_delay_show_play_time") == 0 ) {
-        cv_printer_delay_show_play_time = convar.FloatValue;
     }
     else if( strcmp(convar_name, "sm_nr_printer_show_extraction_time") == 0 ) {
         cv_printer_show_extraction_time = convar.BoolValue;
@@ -86,10 +79,6 @@ methodmap NRPrinter __nullable__
 
     property bool show_play_time {
         public get()                            { return cv_printer_show_play_time; }
-    }
-
-    property float delay_show_play_time {
-        public get()                            { return cv_printer_delay_show_play_time; }
     }
 
     property bool show_extraction_time {
@@ -144,7 +133,7 @@ methodmap NRPrinter __nullable__
         char sql_str[512];
         FormatEx(sql_str, sizeof(sql_str)
             , "SELECT IF((spawn_time<=round_begin_time+%f), engine_time-round_begin_time, (engine_time-round_begin_time)*%f) AS take_time FROM map_info AS m INNER JOIN round_info AS r ON m.id=r.map_id INNER JOIN round_data AS d ON r.id=d.round_id WHERE m.map_name='%s' AND r.obj_chain_md5='%s' AND d.reason='extracted' ORDER BY take_time"
-            , cv_player_spawn_tolerance, 1.0 + cv_player_spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
+            , nr_player_func.spawn_tolerance_time, 1.0 + nr_player_func.spawn_penalty_factor, protect_map_map_name, protect_obj_chain_md5
         );
         nr_dbi.db.Query(CB_asyncPrintExtractedInfo, sql_str, _, DBPrio_Normal);   // 特定回调
     }
@@ -162,6 +151,14 @@ methodmap NRPrinter __nullable__
     // * PrintObjStart
 
     public void PrintExtractionBegin(const float take_time) {
+        static int last_time;
+        if( GetTime() - last_time  <= 3 ) {                 // nmo_zephyr 会在撤离时连续出发两次撤离开始事件
+            return ;
+        }
+        else {
+            last_time = GetTime();
+        }
+
         int   take_time_minute  = RoundToFloor( take_time / 60.0 );
         float take_time_seconds = take_time % 60.0;
 
@@ -212,7 +209,7 @@ methodmap NRPrinter __nullable__
 
     public void PrintPlayerExtraction(const int client, const float engine_time) {
         float take_time = engine_time - nr_round.begin_time;
-        float penalty_time = nr_player_data[client].spawn_time <= (nr_round.begin_time + cv_player_spawn_tolerance) ? 0.0 : take_time * cv_player_spawn_penalty_factor;
+        float penalty_time = nr_player_data[client].spawn_time <= (nr_round.begin_time + nr_player_func.spawn_tolerance_time) ? 0.0 : take_time * nr_player_func.spawn_penalty_factor;
         float final_time = take_time + penalty_time;
 
         int rank_id = 0;

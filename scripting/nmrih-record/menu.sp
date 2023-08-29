@@ -17,15 +17,21 @@
 
 // 缓存不同语言玩家可共用的菜单
 // [maps: mapList(Menu)] | [map_name: routeList(Menu)] | [map_name route: rankList(Menu)]
-StringMap   private_menu_public_menu;
+StringMap   protect_menu_public_menu;
 
-bool        cv_menu_top_enabled;
+bool        cv_menu_top_enabled
+            , cv_menu_top10_enabled
+            , cv_menu_prfs_enabled;
 
 void LoadConVar_Menu()
 {
     ConVar convar;
     (convar = CreateConVar("sm_nr_menu_top_enabled",    "0", "是否启用数据榜单菜单")).AddChangeHook(OnConVarChange_Menu);
     cv_menu_top_enabled = convar.BoolValue;
+    (convar = CreateConVar("sm_nr_menu_top10_enabled",  "0", "是否启用查看当前路线最快前十名指令")).AddChangeHook(OnConVarChange_Menu);
+    cv_menu_top10_enabled = convar.BoolValue;
+    (convar = CreateConVar("sm_nr_menu_prefs_enabled",  "0", "是否启用玩家偏好菜单")).AddChangeHook(OnConVarChange_Menu);
+    cv_menu_prfs_enabled = convar.BoolValue;
 }
 
 void OnConVarChange_Menu(ConVar convar, char[] old_value, char[] new_value)
@@ -34,14 +40,28 @@ void OnConVarChange_Menu(ConVar convar, char[] old_value, char[] new_value)
     {
         return ;
     }
+
     char convar_name[64];
     convar.GetName(convar_name, sizeof(convar_name));
+
     if( strcmp(convar_name, "sm_nr_menu_top_enabled") == 0 )
     {
         cv_menu_top_enabled = convar.BoolValue;
         if( cv_menu_top_enabled )
         {
             Menu_GetAllExtractedData();
+        }
+    }
+    else if( strcmp(convar_name, "sm_nr_menu_top_enabled") == 0 )
+    {
+        cv_menu_top10_enabled = convar.BoolValue;
+    }
+    else if( strcmp(convar_name, "sm_nr_menu_prefs_enabled") == 0 )
+    {
+        cv_menu_prfs_enabled = convar.BoolValue;
+        if( cv_menu_prfs_enabled )
+        {
+            LoadClientPrefs_Menu();
         }
     }
 }
@@ -51,9 +71,9 @@ void LoadCmd_Menu()
     RegConsoleCmd("sm_top",     Cmd_Menu_Catalog,   "show rank catalog menu");
     RegConsoleCmd("sm_rank",    Cmd_Menu_Catalog,   "show rank catalog menu");
     RegConsoleCmd("sm_wr",      Cmd_Menu_Catalog,   "show rank catalog menu");
-    RegConsoleCmd("sm_top10",   Cmd_Printer_top10,  "show top10");
-    RegConsoleCmd("sm_rank10",  Cmd_Printer_top10,  "show top10");
-    RegConsoleCmd("sm_wr10",    Cmd_Printer_top10,  "show top10");
+    RegConsoleCmd("sm_top10",   Cmd_Printer_Top10,  "show top10");
+    RegConsoleCmd("sm_rank10",  Cmd_Printer_Top10,  "show top10");
+    RegConsoleCmd("sm_wr10",    Cmd_Printer_Top10,  "show top10");
 }
 
 void LoadClientPrefs_Menu()
@@ -62,13 +82,17 @@ void LoadClientPrefs_Menu()
     {
         delete protect_client_prefs;
     }
-    protect_client_prefs = new Cookie("nmrih-record clientPrefs", "nmrih-record clientPrefs", CookieAccess_Private);
-    SetCookieMenuItem(CustomCookieMenu_Menu, 0, "NMRIH Record");
+
+    if( cv_menu_prfs_enabled )
+    {
+        protect_client_prefs = new Cookie("nmrih-record clientPrefs", "nmrih-record clientPrefs", CookieAccess_Private);
+        SetCookieMenuItem(CustomCookieMenu_Menu, 0, "NMRIH Record");
+    }
 }
 
 Action Cmd_Menu_Catalog(int client, int args)
 {
-    if( ! cv_menu_top_enabled )
+    if( ! cv_menu_top_enabled && ! cv_menu_prfs_enabled )
     {
         PrintToServer("nmrih record menu is disabled.");
         return Plugin_Handled;
@@ -80,21 +104,24 @@ Action Cmd_Menu_Catalog(int client, int args)
         return Plugin_Handled;
     }
 
-    if( private_menu_public_menu == INVALID_HANDLE )
+    if( protect_menu_public_menu == INVALID_HANDLE )
     {
         ReplyToCommand(client, "%t", "Menu Invalid", "Chat Head");
         return Plugin_Handled;
     }
 
+    char item_display[128];
     Menu menu = new Menu(MenuHandler_Catalog, MenuAction_Select | MenuAction_End);
     menu.ExitBackButton = false;
     menu.SetTitle("%T - %T", "Menu Title Head", client, "Menu Catalog title", client, NR_VERSION);
 
-    char item_display[128];
-    FormatEx(item_display, sizeof(item_display), "%T", "Menu Catalog item_maps", client);
-    menu.AddItem("Menu Catalog item_maps", item_display);
+    if( cv_menu_top_enabled )
+    {
+        FormatEx(item_display, sizeof(item_display), "%T", "Menu Catalog item_maps", client);
+        menu.AddItem("Menu Catalog item_maps", item_display);
+    }
 
-    if( LibraryExists("clientprefs") )
+    if( cv_menu_prfs_enabled && LibraryExists("clientprefs") )
     {
         FormatEx(item_display, sizeof(item_display), "%T", "Menu Catalog item_prefs", client);
         menu.AddItem("Menu Catalog item_prefs", item_display);
@@ -121,8 +148,8 @@ int MenuHandler_Catalog(Menu menu, MenuAction action, int param1, int param2)
             if( strcmp("Menu Catalog item_maps", item_info) == 0 )
             {
                 Menu menu_maps;
-                private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_player_spawn_tolerance, cv_player_spawn_penalty_factor * 100.0);
+                protect_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
+                menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, nr_player_func.spawn_tolerance_time, nr_player_func.spawn_penalty_factor * 100.0);
                 menu_maps.Display(param1, Menu_GetShowTime(param1));
             }
             else if( strcmp("Menu Catalog item_prefs", item_info) == 0 )
@@ -257,18 +284,24 @@ int MenuHandler_Cookies(Menu menu, MenuAction action, int param1, int param2)
     return 0;
 }
 
-Action Cmd_Printer_top10(int client, int args)
+Action Cmd_Printer_Top10(int client, int args)
 {
+    if( cv_menu_top10_enabled )
+    {
+        PrintToServer("nmrih record top10 command is disabled.");
+        return Plugin_Handled;
+    }
+
     char key[MAX_MAP_NAME_LEN * 2];
     FormatEx(key, MAX_MAP_NAME_LEN * 2, "%s%s%s", protect_map_map_name, KEY_MARK_CONNECTOR, protect_obj_chain_md5);
-    if( private_player_all_datas.ContainsKey(key) )
+    if( protect_player_all_datas.ContainsKey(key) )
     {
         ArrayList t_ranks;
         rank_data t_rank_data;
-        private_player_all_datas.GetValue(key, t_ranks);
+        protect_player_all_datas.GetValue(key, t_ranks);
         int len = t_ranks.Length;
 
-        CPrintToChat(client, "%t", "Cmd Top10_CurrentRound", "Chat Head", len, protect_map_map_name, protect_obj_chain_md5);
+        CReplyToCommand(client, "%t", "Cmd Top10_CurrentRound", "Chat Head", len, protect_map_map_name, protect_obj_chain_md5);
 
         int time_minute;
         float time_seconds;
@@ -277,12 +310,12 @@ Action Cmd_Printer_top10(int client, int args)
             t_ranks.GetArray(i, t_rank_data);
             time_minute = RoundToFloor( t_rank_data.take_time / 60.0 );
             time_seconds = t_rank_data.take_time % 60.0;
-            CPrintToChat(client, "%t", "Cmd Top10_Data", "Chat Head", i+1, time_minute, time_seconds, t_rank_data.name);
+            CReplyToCommand(client, "%t", "Cmd Top10_Data", "Chat Head", i+1, time_minute, time_seconds, t_rank_data.name);
         }
     }
     else
     {
-        CPrintToChat(client, "%t", "Cmd Top10_Empty", "Chat Head", protect_map_map_name, protect_obj_chain_md5);
+        CReplyToCommand(client, "%t", "Cmd Top10_Empty", "Chat Head", protect_map_map_name, protect_obj_chain_md5);
     }
     return Plugin_Handled;
 }
@@ -307,7 +340,7 @@ int MenuHandler_Maps(Menu menu, MenuAction action, int param1, int param2)
             menu.GetItem(param2, item_info, MAX_MAP_NAME_LEN);
 
             Menu menu_routes;
-            private_menu_public_menu.GetValue(item_info, menu_routes);
+            protect_menu_public_menu.GetValue(item_info, menu_routes);
             menu_routes.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Obj_chain title", param1, item_info);
             menu_routes.Display(param1, Menu_GetShowTime(param1));
         }
@@ -326,8 +359,8 @@ int MenuHandler_Routes(Menu menu, MenuAction action, int param1, int param2)
                 case MenuCancel_ExitBack:
                 {
                     Menu menu_maps;
-                    private_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
-                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, cv_player_spawn_tolerance, cv_player_spawn_penalty_factor * 100.0);
+                    protect_menu_public_menu.GetValue(KEY_MAPS, menu_maps);
+                    menu_maps.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Maps title", param1, protect_map_map_name, protect_obj_chain_md5, nr_player_func.spawn_tolerance_time, nr_player_func.spawn_penalty_factor * 100.0);
                     menu_maps.Display(param1, Menu_GetShowTime(param1));
                 }
             }
@@ -343,7 +376,7 @@ int MenuHandler_Routes(Menu menu, MenuAction action, int param1, int param2)
             strcopy(obj_chain_md5, MAX_MAP_NAME_LEN, item_info[index_split_mark]);
 
             Menu menu_ranks;
-            private_menu_public_menu.GetValue(item_info, menu_ranks);
+            protect_menu_public_menu.GetValue(item_info, menu_ranks);
             menu_ranks.SetTitle("%T - %T", "Menu Title Head", param1, "Menu Rank title", param1, map_name, obj_chain_md5);
             menu_ranks.Display(param1, Menu_GetShowTime(param1));
         }
@@ -365,7 +398,7 @@ int MenuHandler_Ranks(Menu menu, MenuAction action, int param1, int param2)
                     menu.GetItem(0, item_info, MAX_MAP_NAME_LEN);
 
                     Menu menu_routes;
-                    private_menu_public_menu.GetValue(item_info, menu_routes);
+                    protect_menu_public_menu.GetValue(item_info, menu_routes);
                     menu_routes.Display(param1, Menu_GetShowTime(param1));
                 }
             }
@@ -396,7 +429,7 @@ INNER JOIN round_data d ON r.id=d.round_id \
 INNER JOIN player_name pn ON d.steam_id = pn.steam_id \
 WHERE d.reason='extracted' \
 ORDER BY map_name, obj_chain_md5, take_time, name"
-        , cv_player_spawn_tolerance, cv_player_spawn_penalty_factor + 1.0
+        , nr_player_func.spawn_tolerance_time, nr_player_func.spawn_penalty_factor + 1.0
     );
 
     nr_dbi.db.Query(CB_asyncGetAllExtractedData, sql_str, _, DBPrio_Low); // 特定回调
@@ -408,15 +441,15 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
     {
         Free_all_datas();
 
-        private_player_all_datas = new StringMap();
-        private_player_round_datas = new StringMap();
+        protect_player_all_datas = new StringMap();
+        protect_player_round_datas = new StringMap();
         ArrayList   t_maps = new ArrayList(MAX_MAP_NAME_LEN);
         ArrayList   t_routes,                           t_ranks;
         int         t_field_index,                      round_len;
         char        map_name[MAX_MAP_NAME_LEN],         obj_chain_md5[MAX_MAP_NAME_LEN];
         char        key_ranks[MAX_MAP_NAME_LEN * 2],    key_round_len[MAX_MAP_NAME_LEN * 2];
 
-        private_player_all_datas.SetValue(KEY_MAPS, t_maps);  // save
+        protect_player_all_datas.SetValue(KEY_MAPS, t_maps);  // save
 
         while( results.FetchRow() )
         {
@@ -460,13 +493,13 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
             t_rank_data.take_time = results.FetchFloat(t_field_index);
 
             // save
-            if( private_player_all_datas.ContainsKey(map_name) )
+            if( protect_player_all_datas.ContainsKey(map_name) )
             {
-                private_player_all_datas.GetValue(map_name, t_routes);        // 读取当前地图的所有路线
+                protect_player_all_datas.GetValue(map_name, t_routes);        // 读取当前地图的所有路线
 
-                if( private_player_all_datas.ContainsKey(key_ranks) )
+                if( protect_player_all_datas.ContainsKey(key_ranks) )
                 {
-                    private_player_all_datas.GetValue(key_ranks, t_ranks);    // 读取当前路线排行榜
+                    protect_player_all_datas.GetValue(key_ranks, t_ranks);    // 读取当前路线排行榜
                     t_ranks.PushArray(t_rank_data);
                 }
                 else
@@ -476,8 +509,8 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
                     t_routes.PushString(obj_chain_md5);
                     t_ranks.PushArray(t_rank_data);
 
-                    private_player_all_datas.SetValue(key_ranks, t_ranks);
-                    private_player_round_datas.SetValue(key_round_len, round_len);
+                    protect_player_all_datas.SetValue(key_ranks, t_ranks);
+                    protect_player_round_datas.SetValue(key_round_len, round_len);
                 }
             }
             else
@@ -489,9 +522,9 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
                 t_routes.PushString(obj_chain_md5);
                 t_ranks.PushArray(t_rank_data);
 
-                private_player_all_datas.SetValue(map_name, t_routes);
-                private_player_all_datas.SetValue(key_ranks, t_ranks);
-                private_player_round_datas.SetValue(key_round_len, round_len);
+                protect_player_all_datas.SetValue(map_name, t_routes);
+                protect_player_all_datas.SetValue(key_ranks, t_ranks);
+                protect_player_round_datas.SetValue(key_round_len, round_len);
             }
         }
         Free_all_public_menus();
@@ -505,9 +538,9 @@ void CB_asyncGetAllExtractedData(Database db, DBResultSet results, const char[] 
 
 void Free_all_datas()
 {
-    if( private_player_all_datas != INVALID_HANDLE )
+    if( protect_player_all_datas != INVALID_HANDLE )
     {
-        StringMapSnapshot keys = private_player_all_datas.Snapshot();
+        StringMapSnapshot keys = protect_player_all_datas.Snapshot();
         int len_keys = keys.Length;
         char key_name[MAX_MAP_NAME_LEN * 2];
         ArrayList tmp;
@@ -515,18 +548,18 @@ void Free_all_datas()
         for(int i=0; i<len_keys; ++i)
         {
             keys.GetKey(i, key_name, MAX_MAP_NAME_LEN * 2);
-            private_player_all_datas.GetValue(key_name, tmp);
+            protect_player_all_datas.GetValue(key_name, tmp);
             if( tmp != INVALID_HANDLE )
             {
                 delete tmp;
             }
         }
-        delete private_player_all_datas;
+        delete protect_player_all_datas;
     }
 
-    if( private_player_round_datas != INVALID_HANDLE )
+    if( protect_player_round_datas != INVALID_HANDLE )
     {
-        delete private_player_round_datas;
+        delete protect_player_round_datas;
     }
 }
 
@@ -539,13 +572,13 @@ void Traversal_AllData_CreatePublicMenu()
     char map_name[MAX_MAP_NAME_LEN], obj_chain_md5[MAX_MAP_NAME_LEN];
     char key_ranks[MAX_MAP_NAME_LEN * 2], key_round_len[MAX_MAP_NAME_LEN * 2];
 
-    private_player_all_datas.GetValue(KEY_MAPS, t_maps);
+    protect_player_all_datas.GetValue(KEY_MAPS, t_maps);
     len_t_maps = t_maps.Length;
 
-    private_menu_public_menu = new StringMap();
+    protect_menu_public_menu = new StringMap();
     Menu menu_maps = new Menu(MenuHandler_Maps, MenuAction_Select | MenuAction_Cancel);
     menu_maps.ExitBackButton = true;
-    private_menu_public_menu.SetValue(KEY_MAPS, menu_maps);
+    protect_menu_public_menu.SetValue(KEY_MAPS, menu_maps);
 
     Menu menu_routes, menu_ranks;
     char item_display[MAX_MAP_NAME_LEN * 2];
@@ -554,20 +587,20 @@ void Traversal_AllData_CreatePublicMenu()
     {
         t_maps.GetString(i, map_name, MAX_MAP_NAME_LEN);
 
-        private_player_all_datas.GetValue(map_name, t_routes);
+        protect_player_all_datas.GetValue(map_name, t_routes);
         len_t_routes = t_routes.Length;
 
         menu_maps.AddItem(map_name, map_name, ITEMDRAW_DEFAULT);
 
-        if( private_menu_public_menu.ContainsKey(map_name) )
+        if( protect_menu_public_menu.ContainsKey(map_name) )
         {
-            private_menu_public_menu.GetValue(map_name, menu_routes);
+            protect_menu_public_menu.GetValue(map_name, menu_routes);
         }
         else
         {
             menu_routes = new Menu(MenuHandler_Routes, MenuAction_Select | MenuAction_Cancel);
             menu_routes.ExitBackButton = true;
-            private_menu_public_menu.SetValue(map_name, menu_routes);
+            protect_menu_public_menu.SetValue(map_name, menu_routes);
         }
 
         for(int j=0; j<len_t_routes; ++j)
@@ -575,24 +608,24 @@ void Traversal_AllData_CreatePublicMenu()
             t_routes.GetString(j, obj_chain_md5, MAX_MAP_NAME_LEN);
 
             FormatEx(key_ranks, MAX_MAP_NAME_LEN * 2, "%s%s%s", map_name, KEY_MARK_CONNECTOR, obj_chain_md5);
-            private_player_all_datas.GetValue(key_ranks, t_ranks);
+            protect_player_all_datas.GetValue(key_ranks, t_ranks);
             len_t_ranks = t_ranks.Length;
 
             FormatEx(key_round_len, MAX_MAP_NAME_LEN * 2, "%s%s%s", key_ranks, KEY_MARK_CONNECTOR, KEY_MARK_ROUND_DATA_LEN);
-            private_player_round_datas.GetValue(key_round_len, round_len);
+            protect_player_round_datas.GetValue(key_round_len, round_len);
 
 
             menu_routes.AddItem(key_ranks, obj_chain_md5, ITEMDRAW_DEFAULT);
 
-            if( private_menu_public_menu.ContainsKey(key_ranks) )
+            if( protect_menu_public_menu.ContainsKey(key_ranks) )
             {
-                private_menu_public_menu.GetValue(key_ranks, menu_ranks);
+                protect_menu_public_menu.GetValue(key_ranks, menu_ranks);
             }
             else
             {
                 menu_ranks = new Menu(MenuHandler_Ranks, MenuAction_Cancel);
                 menu_ranks.ExitBackButton = true;
-                private_menu_public_menu.SetValue(key_ranks, menu_ranks);
+                protect_menu_public_menu.SetValue(key_ranks, menu_ranks);
             }
 
             for(int k=0; k<len_t_ranks; ++k)
@@ -612,9 +645,9 @@ void Traversal_AllData_CreatePublicMenu()
 
 void Free_all_public_menus()
 {
-    if( private_menu_public_menu != INVALID_HANDLE )
+    if( protect_menu_public_menu != INVALID_HANDLE )
     {
-        StringMapSnapshot keys = private_menu_public_menu.Snapshot();
+        StringMapSnapshot keys = protect_menu_public_menu.Snapshot();
         int len_keys = keys.Length;
         char key_name[MAX_MAP_NAME_LEN * 2];
         Menu tmp;
@@ -622,12 +655,21 @@ void Free_all_public_menus()
         for(int i=0; i<len_keys; ++i)
         {
             keys.GetKey(i, key_name, MAX_MAP_NAME_LEN * 2);
-            private_menu_public_menu.GetValue(key_name, tmp);
+            protect_menu_public_menu.GetValue(key_name, tmp);
             if( tmp != INVALID_HANDLE )
             {
                 delete tmp;
             }
         }
-        delete private_menu_public_menu;
+        delete protect_menu_public_menu;
     }
+}
+
+int GetClientPrefsIntValue(int client)
+{
+    if( cv_menu_prfs_enabled && protect_client_prefs != INVALID_HANDLE )
+    {
+        return protect_client_prefs.GetInt(client, CLIENT_PREFS_BIT_DEFAULT);
+    }
+    return 0;
 }
