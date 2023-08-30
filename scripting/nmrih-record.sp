@@ -1,8 +1,7 @@
 // Todo: 在地图、回合信息记录失败时停止记录
 // Todo: 补充使用绷带和医疗包事件及记录字段
-// Todo: 修复玩家名称为空白 (特殊字符) 时的 SQL 执行错误 (推测已修复, 造成原因: 没有正确设置驱动及编码)
+// Todo: Top菜单支持查看完整通关数据
 // Todo: 删除 manager 工厂
-// Todo: Top菜单支持下一级查看完整通关数据
 
 #pragma newdecls required
 #pragma semicolon 1

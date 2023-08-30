@@ -6,7 +6,7 @@
 -- 在 OnMapEnd 时更新结束时间
 -- DROP TABLE IF EXISTS map_info;
 CREATE TABLE IF NOT EXISTS map_info (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
 
     `map_name`                  VARCHAR ( 64 )      NOT NULL    COMMENT '地图名称',
     `start_time`                DOUBLE              DEFAULT 0   COMMENT 'OnMapStart 时间',
@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS map_info (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    -- , INDEX map_info_1 ( map_name )
+    -- , INDEX map_info_map_name ( map_name )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -35,8 +35,8 @@ ENGINE = INNODB ;
 -- extraction_begin:  只更新 extraction_begin_time, 用于计时 -> 撤离开始时间
 -- DROP TABLE IF EXISTS round_info;
 CREATE TABLE IF NOT EXISTS round_info (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
-    `map_id`                    INT UNSIGNED        NOT NULL    COMMENT '地图id',
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
+    `map_id`                    INT                 NOT NULL    UNSIGNED COMMENT '地图id',
 
     `practice`                  TINYINT             NOT NULL    COMMENT '是否为练习回合',
     `start_time`                DOUBLE              NOT NULL    COMMENT 'Round 开始时间',
@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS round_info (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    -- , INDEX round_info_1 ( map_id )
+    -- , INDEX round_info_map_id ( map_id )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -62,7 +62,7 @@ ENGINE = INNODB ;
 -- 新增条件: nmrih_reset_map(game_reastrt)、player_extracted、player_death、player_leave
 -- DROP TABLE IF EXISTS round_data;
 CREATE TABLE IF NOT EXISTS round_data (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
@@ -126,9 +126,9 @@ CREATE TABLE IF NOT EXISTS round_data (
 
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY ( id )
-    -- , INDEX round_data_1 ( round_id )
-    -- , INDEX round_data_2 ( steam_id )
-    -- , INDEX round_data_3(reason)
+    -- , INDEX round_data_round_id ( round_id )
+    -- , INDEX round_data_steam_id ( steam_id )
+    -- , INDEX round_data_reason (reason)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -143,7 +143,7 @@ ENGINE = INNODB ;
 --     触发撤离开始
 -- DROP TABLE IF EXISTS objective_info;
 CREATE TABLE IF NOT EXISTS objective_info (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `engine_time`               DOUBLE              NOT NULL    COMMENT '任务/wave 开始的时间 (EngineTime)',
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS objective_info (
 
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY ( id )
-    -- , INDEX objective_info_1 ( round_id )
+    -- , INDEX objective_info_round_id ( round_id )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -185,7 +185,7 @@ ENGINE = INNODB ;
 -- 新增条件: watermelon_rescue
 -- DROP TABLE IF EXISTS watermelon_rescue;
 CREATE TABLE IF NOT EXISTS watermelon_rescue (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `engine_time`               DOUBLE              NOT NULL    COMMENT 'EngineTime',
@@ -193,8 +193,8 @@ CREATE TABLE IF NOT EXISTS watermelon_rescue (
 
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY ( id )
-    -- , INDEX watermelon_rescue_1 ( round_id )
-    -- , INDEX watermelon_rescue_2 ( steam_id )
+    -- , INDEX watermelon_rescue_round_id ( round_id )
+    -- , INDEX watermelon_rescue_steam_id ( steam_id )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -206,7 +206,7 @@ ENGINE = INNODB ;
 -- 新增条件: 玩家进入服务器, 且为查询到steam_id
 -- DROP TABLE IF EXISTS player_stats;
 CREATE TABLE IF NOT EXISTS player_stats (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
 
     `play_time`                 INT UNSIGNED        DEFAULT 0   COMMENT '',
@@ -234,7 +234,7 @@ CREATE TABLE IF NOT EXISTS player_stats (
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
     PRIMARY KEY ( id )
-    , UNIQUE KEY `player_stats_1` (`steam_id`)
+    , UNIQUE KEY `player_stats_steam_id` (`steam_id`)
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;

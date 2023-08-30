@@ -5,7 +5,7 @@
 -- 新增条件: 玩家进入服务器. 用于发生纠纷时获取信息
 -- DROP TABLE IF EXISTS player_put_in;
 CREATE TABLE IF NOT EXISTS player_put_in (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
 
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
@@ -34,7 +34,7 @@ ENGINE = INNODB ;
 -- 新增条件: 玩家被攻击
 -- DROP TABLE IF EXISTS player_hurt;
 CREATE TABLE IF NOT EXISTS player_hurt (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `engine_time`               DOUBLE              NOT NULL    COMMENT 'EngineTime',
@@ -61,7 +61,7 @@ ENGINE = INNODB ;
 -- 新增条件: 玩家发言
 -- DROP TABLE IF EXISTS player_say;
 CREATE TABLE IF NOT EXISTS player_say (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
@@ -78,23 +78,41 @@ ENGINE = INNODB ;
 
 
 -- ----------------------------------------------------------------------------------------------------------------
--- vote_info
--- 新增条件:
---     调用命令 callvote 且参数 > 1
---     玩家触发投票选择
--- DROP TABLE IF EXISTS vote_info;
-CREATE TABLE IF NOT EXISTS vote_info (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+-- vote_submit
+-- 新增条件: 调用命令 callvote 且参数 > 1
+-- DROP TABLE IF EXISTS vote_submit;
+CREATE TABLE IF NOT EXISTS vote_submit (
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
     `vote_info`                 VARCHAR ( 32 )                  COMMENT '发起的投票信息',
+
+    `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY ( id )
+    -- , INDEX vote_submit_round_id ( round_id )
+    -- , INDEX vote_submit_steam_id ( steam_id )
+)
+DEFAULT CHARSET = utf8mb4
+ENGINE = INNODB ;
+-- ----------------------------------------------------------------------------------------------------------------
+
+
+-- ----------------------------------------------------------------------------------------------------------------
+-- vote_option
+-- 新增条件: 玩家选择投票
+-- DROP TABLE IF EXISTS vote_option;
+CREATE TABLE IF NOT EXISTS vote_option (
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
+    `vote_id`                   INT UNSIGNED        NOT NULL    COMMENT '投票id',
+
+    `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
     `vote_option`               TINYINT                         COMMENT '玩家做出的选项',
 
     `create_time`               TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY ( id )
---     , INDEX vote_info_1 ( round_id )
---     , INDEX vote_info_2 ( steam_id )
+    -- , INDEX vote_option_vote_id (vote_id)
+    -- , INDEX vote_option_steam_id ( steam_id )
 )
 DEFAULT CHARSET = utf8mb4
 ENGINE = INNODB ;
@@ -107,7 +125,7 @@ ENGINE = INNODB ;
 --     玩家离开服务器
 -- DROP TABLE IF EXISTS player_disconnect;
 CREATE TABLE IF NOT EXISTS player_disconnect (
-    `id`                        INT UNSIGNED AUTO_INCREMENT,
+    `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
     `round_id`                  INT UNSIGNED        NOT NULL    COMMENT '回合id',
 
     `steam_id`                  INT                 NOT NULL    COMMENT '玩家 STEAM ID',
