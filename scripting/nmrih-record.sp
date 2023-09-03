@@ -6,9 +6,6 @@
 #pragma newdecls required
 #pragma semicolon 1
 
-#define  INCLUDE_MANAGER
-#define  NR_VERSION                 "v1.0.1"
-
 #include <sourcemod>
 #include <dbi>
 #include <geoip>
@@ -22,6 +19,19 @@
 #include <multicolors>
 #include <vscript_proxy>
 #include <smlib/crypt>
+
+#define  INCLUDE_MANAGER
+#define  PLUGIN_VERSION                 "v1.0.2-230904"
+#define  PLUGIN_DESCRIPTION             "NMRIH data record system"
+
+public Plugin myinfo =
+{
+    name        = "NMRIH Notice",
+    author      = "F1F88",
+    description = PLUGIN_DESCRIPTION,
+    version     = PLUGIN_VERSION,
+    url         = "https://github.com/F1F88/nmrih-notice"
+};
 
 #include "nmrih-record/dbi.sp"
 #include "nmrih-record/map.sp"
@@ -43,7 +53,6 @@ float    cv_global_timer_interval;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    LoadNative_Player();
     LoadOffset_Player();
     return APLRes_Success;
 }
@@ -56,7 +65,7 @@ public void OnPluginStart()
     ConVar convar;
     (convar = CreateConVar("sm_nr_global_timer_interval", "60.0", "全局定时器时间间隔(秒) | 不建议修改 | 目前用于维护数据库连接与更新玩家游戏时长")).AddChangeHook(OnGlobalConVarChange);
     cv_global_timer_interval = convar.FloatValue;
-    CreateConVar("sm_nr_version", NR_VERSION);
+    CreateConVar("sm_nr_version", PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
 
     // dbi
     nr_dbi = new NRDbi();
