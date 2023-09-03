@@ -20,6 +20,7 @@
 #define  REQUIRE_EXTENSIONS
 
 #include <multicolors>
+#include <vscript_proxy>
 #include <smlib/crypt>
 
 #include "nmrih-record/dbi.sp"
@@ -42,12 +43,8 @@ float    cv_global_timer_interval;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    MarkNativeAsOptional("Cookie.Cookie");
-    MarkNativeAsOptional("Cookie.Get");
-    MarkNativeAsOptional("Cookie.GetInt");
-    MarkNativeAsOptional("Cookie.Set");
-    MarkNativeAsOptional("Cookie.SetInt");
-    MarkNativeAsOptional("SetCookieMenuItem");
+    LoadNative_Player();
+    LoadOffset_Player();
     return APLRes_Success;
 }
 
@@ -515,7 +512,7 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         return Plugin_Continue;
     }
 
-    int victim_hp = GetEntProp(victim, Prop_Data, "m_iHealth", 1);  // 获取到的是减去伤害前的拥有生命值
+    int victim_hp = GetClientHealth(victim);  // 获取到的是减去伤害前的拥有生命值
     if( victim_hp <= 0 )
     {
         return Plugin_Continue;
@@ -546,13 +543,13 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         nr_player_data[victim].hurt_dmg_total += real_dmg;
         if( victim == inflictor )                                   // 武器也是自己
         {
-            if( damagetype == DMG_RADIATION && FloatCompare(damage, nr_player_func.bleedout_dmg) == 0 ) // 流血
+            if( GetEntData(victim, nr_player_func.offset_bleedingOut, 1) && damagetype == DMG_RADIATION && FloatCompare(damage, nr_player_func.bleedout_dmg) == 0 ) // 流血
             {
                 nr_player_data[victim].hurt_cnt_bleed += 1;
                 nr_player_data[victim].hurt_dmg_bleed += real_dmg;
                 strcopy(weapon_name, MAX_WEAPON_LEN, "_bleed");
             }
-            else if( damagetype == DMG_GENERIC && FloatCompare(damage, 100.0) == 0 ) // 感染
+            else if( RunEntVScriptBool(victim, "IsInfected()") && damagetype == DMG_GENERIC && FloatCompare(damage, 100.0) == 0 ) // 感染
             {
                 strcopy(weapon_name, MAX_WEAPON_LEN, "_infected");
             }

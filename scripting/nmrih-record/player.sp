@@ -108,6 +108,9 @@ enum struct rank_data
     float   take_time;
 }
 
+int             private_player_offset_bleedingOut;
+
+
 float           cv_player_ff_factor
                 , cv_player_bleedout_dmg
                 , cv_player_connected_delay_time
@@ -526,6 +529,10 @@ methodmap NRPlayerFunc __nullable__
         public get()                    { return cv_player_spawn_penalty_factor; }
     }
 
+    property int offset_bleedingOut {
+        public get()                    { return private_player_offset_bleedingOut; }
+    }
+
     /**
      * 玩家首次进入服务器, 为其新增一条统计信息
      * 返回字符串, 可用于异步执行. Length = 51 - 2 + int
@@ -640,6 +647,25 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
      */
     public void insNewWatermelonRescue_sqlStr(char[] sql_str, int max_length, const int client) {
         FormatEx(sql_str, max_length, "INSERT INTO watermelon_rescue VALUES(NULL,%d,%f,%d,NOW())", nr_round.round_id, GetEngineTime(), nr_player_data[client].steam_id);
+    }
+}
+
+void LoadNative_Player()
+{
+    MarkNativeAsOptional("Cookie.Cookie");
+    MarkNativeAsOptional("Cookie.Get");
+    MarkNativeAsOptional("Cookie.GetInt");
+    MarkNativeAsOptional("Cookie.Set");
+    MarkNativeAsOptional("Cookie.SetInt");
+    MarkNativeAsOptional("SetCookieMenuItem");
+}
+
+void LoadOffset_Player()
+{
+    private_player_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
+    if( private_player_offset_bleedingOut <= 0 )
+    {
+        LogError("Can't find offset 'CNMRiH_Player::_bleedingOut'!");
     }
 }
 
