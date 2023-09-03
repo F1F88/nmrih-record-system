@@ -7,116 +7,13 @@
 
 #define         MAX_WEAPON_LEN                              32
 
-#define         CLIENT_PREFS_BIT_SHOW_MENU_TIME             (1 << 0)
-#define         CLIENT_PREFS_BIT_SHOW_WELCOME               (1 << 1)
-#define         CLIENT_PREFS_BIT_SHOW_EXTRACTION_RANK       (1 << 2)
-#define         CLIENT_PREFS_BIT_SHOW_OBJ_CHAIN_MD5         (1 << 3)
-#define         CLIENT_PREFS_BIT_SHOW_OBJ_START             (1 << 4)
-#define         CLIENT_PREFS_BIT_SHOW_WAVE_MAX              (1 << 5)
-#define         CLIENT_PREFS_BIT_SHOW_WAVE_START            (1 << 6)
-#define         CLIENT_PREFS_BIT_SHOW_EXTRACTION_BEGIN      (1 << 7)
-#define         CLIENT_PREFS_BIT_SHOW_PLAYER_EXTRACTION     (1 << 8)
-#define         CLIENT_PREFS_BIT_SHOW_WATERMELON_RESCURE    (1 << 9)
-#define         CLIENT_PREFS_BIT_DEFAULT                    (1 << 10) - 1
-
-#define         KEY_MAPS                                    "maps"
-#define         KEY_MARK_ROUND_DATA                         "data"
-#define         KEY_MARK_ROUND_DATA_LEN                     "dataLen"
-#define         KEY_MARK_ROUND_DATA_AVG                     "dataAvg"
-#define         KEY_MARK_CONNECTOR                          "&"
-
-enum ZOMBIE_TYPE {
-    Zombie_Type_None = 0,
-    Zombie_Type_Shambler = 1,
-    Zombie_Type_Runner = 2,
-    Zombie_Type_Kid = 3,
-    Zombie_Type_Turned = 4
-}
-
-enum WEAPON_ID {
-    none = 0,
-    WEAPON_fa_glock17 = 1,
-    WEAPON_fa_m92fs = 2,
-    WEAPON_fa_mkiii = 3,
-    WEAPON_fa_1911 = 4,
-    WEAPON_fa_sw686 = 5,
-    WEAPON_fa_870 = 6,
-    WEAPON_fa_superx3 = 7,
-    WEAPON_fa_sv10 = 8,
-    WEAPON_fa_500a = 9,
-    WEAPON_fa_winchester1892 = 10,
-    WEAPON_fa_1022 = 11,
-    WEAPON_fa_1022_25mag = 12,
-    WEAPON_fa_sks = 13,
-    WEAPON_fa_sako85 = 14,
-    WEAPON_fa_cz858 = 15,
-    WEAPON_fa_jae700 = 16,
-    WEAPON_fa_fnfal = 17,
-    WEAPON_fa_mac10 = 18,
-    WEAPON_fa_mp5a3 = 19,
-    WEAPON_fa_m16a4 = 20,
-    WEAPON_fa_m16a4_carryhandle = 21,
-    WEAPON_bow_deerhunter = 22,
-    WEAPON_tool_barricade = 23,
-    WEAPON_tool_extinguisher = 24,
-    WEAPON_tool_flare_gun = 25,
-    WEAPON_tool_welder = 26,
-    WEAPON_me_axe_fire = 27,
-    WEAPON_me_bat_metal = 28,
-    WEAPON_me_crowbar = 29,
-    WEAPON_me_chainsaw = 30,
-    WEAPON_me_abrasivesaw = 31,
-    WEAPON_me_etool = 32,
-    WEAPON_me_fists = 33,
-    WEAPON_me_fubar = 34,
-    WEAPON_me_hatchet = 35,
-    WEAPON_me_kitknife = 36,
-    WEAPON_me_machete = 37,
-    WEAPON_me_pipe_lead = 38,
-    WEAPON_me_shovel = 39,
-    WEAPON_me_sledge = 40,
-    WEAPON_me_wrench = 41,
-    WEAPON_item_maglite = 42,
-    WEAPON_item_zippo = 48,
-    WEAPON_exp_grenade = 49,
-    WEAPON_exp_molotov = 50,
-    WEAPON_exp_tnt = 51,
-    WEAPON_me_pickaxe = 64,
-    WEAPON_me_cleaver = 65,
-    WEAPON_fa_sks_nobayo = 66,
-    WEAPON_fa_sako85_ironsights = 67
-}
-
-Cookie      protect_client_prefs;
-
-// 缓存撤离数据
-// [maps: routeList(ArrayList)] | [map_name: rankList(ArrayList)] | [map_name route: rankData(rank_data)]
-StringMap   protect_player_all_datas;
-
-// [map_name route datakey: roundData(any)]
-StringMap   protect_player_round_datas;
-
-enum struct rank_data
-{
-    float   round_begin_time;
-    float   extraction_begin_time;
-    float   spawn_time;
-    float   engine_time;
-    char    name[MAX_NAME_LENGTH];
-    int     steam_id;
-    bool    completed;
-    float   take_time;
-}
-
 int             private_player_offset_bleedingOut;
 
 
 float           cv_player_ff_factor
                 , cv_player_bleedout_dmg
                 , cv_player_connected_delay_time
-                , cv_player_play_time_interval
-                , cv_player_spawn_tolerance_time
-                , cv_player_spawn_penalty_factor;
+                , cv_player_play_time_interval;
 
 float           private_player_spawn_time[MAXPLAYERS + 1]
                 , private_player_play_time[MAXPLAYERS + 1];
@@ -521,14 +418,6 @@ methodmap NRPlayerFunc __nullable__
         public get()                    { return cv_player_play_time_interval; }
     }
 
-    property float spawn_tolerance_time {
-        public get()                    { return cv_player_spawn_tolerance_time; }
-    }
-
-    property float spawn_penalty_factor {
-        public get()                    { return cv_player_spawn_penalty_factor; }
-    }
-
     property int offset_bleedingOut {
         public get()                    { return private_player_offset_bleedingOut; }
     }
@@ -650,16 +539,6 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
     }
 }
 
-void LoadNative_Player()
-{
-    MarkNativeAsOptional("Cookie.Cookie");
-    MarkNativeAsOptional("Cookie.Get");
-    MarkNativeAsOptional("Cookie.GetInt");
-    MarkNativeAsOptional("Cookie.Set");
-    MarkNativeAsOptional("Cookie.SetInt");
-    MarkNativeAsOptional("SetCookieMenuItem");
-}
-
 void LoadOffset_Player()
 {
     private_player_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
@@ -680,10 +559,6 @@ void LoadConVar_Player()
     cv_player_connected_delay_time = convar.FloatValue;
     (convar = CreateConVar("sm_nr_player_play_time_interval",       "60.0", "更新玩家游玩时长最短间隔(秒) | 建议为 sm_nr_global_timer_interval 的整数倍")).AddChangeHook(OnConVarChange_Player);
     cv_player_play_time_interval = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_player_spawn_tolerance_time",     "10.0", "round_begin 后这么多秒内复活的玩家在计算通关时长时将被罚时")).AddChangeHook(OnConVarChange_Player);
-    cv_player_spawn_tolerance_time = convar.FloatValue;
-    (convar = CreateConVar("sm_nr_player_spawn_penalty_factor",     "0.25", "额外罚时百分比. 最终结果 = (撤离时间 - round_begin) * (1.0 + value)")).AddChangeHook(OnConVarChange_Player);
-    cv_player_spawn_penalty_factor = convar.FloatValue;
 }
 
 void LoadHook_Player()
@@ -724,12 +599,6 @@ void OnConVarChange_Player(ConVar convar, char[] old_value, char[] new_value)
     }
     else if( strcmp(convar_name, "sm_nr_player_play_time_interval") == 0 ) {
         cv_player_play_time_interval = convar.FloatValue;
-    }
-    else if( strcmp(convar_name, "sm_nr_player_spawn_tolerance_time") == 0 ) {
-        cv_player_spawn_tolerance_time = convar.FloatValue;
-    }
-    else if( strcmp(convar_name, "sm_nr_player_spawn_penalty_factor") == 0 ) {
-        cv_player_spawn_penalty_factor = convar.FloatValue;
     }
 }
 

@@ -29,8 +29,6 @@
 #include "nmo-guard/objective-manager.sp"
 #include "nmrih-record/objective.sp"
 #include "nmrih-record/player.sp"
-#include "nmrih-record/printer.sp"
-#include "nmrih-record/menu.sp"
 
 #if      defined INCLUDE_MANAGER
 #include "nmrih-record/manager.sp"
@@ -43,7 +41,6 @@ float    cv_global_timer_interval;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    LoadNative_Player();
     LoadOffset_Player();
     return APLRes_Success;
 }
@@ -83,20 +80,6 @@ public void OnPluginStart()
     nr_player_func = new NRPlayerFunc();
     LoadConVar_Player();
     LoadHook_Player();
-
-    // Printer
-    nr_printer = new NRPrinter();
-    protect_printer_extracted_rank = new ArrayList();
-    LoadConVar_Printer();
-
-    // menu
-    LoadConVar_Menu();
-    LoadCmd_Menu();
-
-    if( LibraryExists("clientprefs") )
-    {
-        LoadClientPrefs_Menu();
-    }
 
 #if defined INCLUDE_MANAGER
     nr_manager = new NRManager();
@@ -140,12 +123,6 @@ public void OnMapStart()
     if( global_timer == INVALID_HANDLE )
     {
         global_timer = CreateTimer(cv_global_timer_interval, Timer_global, _, TIMER_REPEAT | TIMER_FLAG_NO_MAPCHANGE);
-    }
-
-    // 查询并缓存撤离数据
-    if( cv_menu_top_enabled )
-    {
-        Menu_GetAllExtractedData();
     }
 }
 
@@ -263,7 +240,6 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
 
     // 刷新任务链
     UpdateObiChain();
-    protect_printer_extracted_rank.Clear();
 
     // 记录回合
     nr_round.practice = false;
@@ -275,11 +251,6 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
 
         nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), nr_objective.obj_chain_len, protect_obj_chain_md5);
         nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
-
-        if( nr_printer.show_obj_chain_md5 )                         // [提示] 路线ID: {2}
-        {
-            nr_printer.PtintObjChainMD5(protect_obj_chain_md5);
-        }
     }
     else if( nr_map.map_type == MAP_TYPE_NMS )
     {
@@ -288,22 +259,6 @@ void On_nmrih_reset_map(Event event, const char[] name, bool dontBroadcast)
 
         nr_round.insNewRound_sqlStr(sql_str, sizeof(sql_str), nr_objective.wave_end, protect_map_map_name);
         nr_round.round_id = nr_dbi.syncExeStrSQL_GetId(sql_str);
-
-        if( nr_printer.show_wave_max )                              // [提示] 当前地图: {2} | wave数: {3}
-        {
-            nr_printer.PrintObjWaveMax(nr_objective.wave_end);
-        }
-    }
-
-    // 查询并缓存撤离数据
-    if( cv_menu_top_enabled )
-    {
-        Menu_GetAllExtractedData();
-    }
-
-    if( nr_printer.show_extraction_time )
-    {
-        nr_printer.PrintExtractedInfo();
     }
 }
 
@@ -338,12 +293,6 @@ Action UserMsg_Objective(UserMsg msg, BfRead bf, const int[] players, int player
     nr_objective.insNewObjective_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), text, -1);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
 
-    if( nr_printer.show_obj_start )                                 // [提示] 任务ID: {2} ({3}/{4}) | 信息: {5}
-    {
-        DataPack data = new DataPack();
-        data.WriteString(text);
-        RequestFrame(PrintObjStart, data);
-    }
     return Plugin_Continue;
 }
 
@@ -356,13 +305,6 @@ void On_new_wave(Event event, const char[] name, bool dontBroadcast)
     char sql_str[256];
     nr_objective.insNewObjective_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), NULL_STRING, resupply);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
-
-    // Wave_end == 1 - [提示] wave: {2} / {3} (空投)
-    // Wave_end == 0 - [提示] wave: {2} (空投)
-    if( nr_printer.show_wave_start )                                // TODO: 优化, 不用每个 wave 都重新获取 wave_end
-    {
-        nr_printer.PrintNewWave(nr_objective.wave_serial, nr_objective.wave_end, resupply);
-    }
 }
 
 // 撤离开始
@@ -383,14 +325,6 @@ void On_extraction_begin(Event event, const char[] name, bool dontBroadcast)
         nr_objective.insNewObjective_sqlStr(nr_dbi.db, sql_str, sizeof(sql_str), "extraction_begin", 0);
     }
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
-
-    // 最后一个 任务/wave 完成 输出开始撤离
-    // NMO - [提示] 任务ID: {2} ({3}/{4}) | 信息: 救援已到, 快润!
-    // NMS - [提示] 信息: 救援已到, 快润!
-    if( nr_printer.show_extraction_begin )
-    {
-        nr_printer.PrintExtractionBegin( nr_round.extraction_begin_time - nr_round.begin_time );
-    }
 }
 
 
@@ -401,7 +335,6 @@ public void OnClientPutInServer(int client)
 {
     nr_player_data[client].cleanup_stats();                         // 保证玩家统计数据已清空
     nr_player_data[client].put_in_time = GetTime();
-    nr_player_data[client].prefs = GetClientPrefsIntValue(client);
     nr_player_data[client].steam_id = GetSteamAccountID(client);    // 避免 OnClientAuthorized 可能触发更早产生的问题
 
     SDKHook(client, SDKHook_OnTakeDamage, On_player_TakeDamage);
@@ -469,11 +402,6 @@ Action Timer_OnClientPutInServer(Handle timer, DataPack data)
     nr_manager.insNewPlayerPutIn_sqlStr(sql_str, sizeof(sql_str), steam_id, name, ip, country, continent, region, city, create_time);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);   // 记录玩家来源
 #endif
-
-    if( IsClientInGame(client) && nr_player_data[client].steam_id != 0 && nr_printer.show_play_time )
-    {
-        nr_printer.PrintWelcome(client);
-    }
     return Plugin_Stop;
 }
 
@@ -614,18 +542,11 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
             nr_player_data[victim].hurt_dmg_turned += real_dmg;
         }
     }
-
 #if defined INCLUDE_MANAGER
     char sql_str[160];
     nr_manager.insNewPlayerHurt_sqlStr(sql_str, sizeof(sql_str), victim_id, attacker_id, weapon_name, real_dmg, damagetype);
     nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Low);
 #endif
-
-    // char atc_name[32];
-    // GetEdictClassname(attacker, atc_name, 32);
-    // PrintToChatAll("pp | vic:%d | atc: %d | atc:%s | wap:%s | dmg: %f | rdmg: %d", victim, attacker, atc_name, weapon_name, damage, real_dmg);
-    // LogMessage("pl | vic:%d | atc: %d | atc: %s | wap:%s | dmg: %f | rdmg: %d", victim, attacker, atc_name, weapon_name, damage, real_dmg);
-
     return Plugin_Continue;
 }
 
@@ -707,13 +628,6 @@ Action On_zombie_TakeDamage(int victim, int& attacker, int& inflictor, float& da
                 nr_player_data[attacker].inflict_dmg_flame += real_dmg;
             }
         }
-
-        // char vic_name[32], weapon_name[32];
-        // GetEntityClassname(victim, vic_name, sizeof(vic_name));
-        // GetEntityClassname(inflictor, weapon_name, sizeof(weapon_name));
-        // PrintToChatAll("zp | vic:%s | vic: %d | atc:%d | wap:%s | dmg: %f | rdmg: %d", vic_name, victim, attacker, weapon_name, damage, real_dmg);
-        // LogMessage("zl | vic:%s | vic: %d | atc:%d | wap:%s | dmg: %f | rdmg: %d", vic_name, victim, attacker, weapon_name, damage, real_dmg);
-
     }
     return Plugin_Continue;
 }
@@ -837,13 +751,6 @@ void On_player_extracted(Event event, const char[] name, bool dontBroadcast)
             nr_player_func.updPlayerStats_sqlStr(sql_str, sizeof(sql_str), client, 0, 1);
             nr_dbi.asyncExecStrSQL(sql_str, sizeof(sql_str), DBPrio_Normal);
 
-            // 输出撤离信息
-            // [提示] {name} 撤离成功! 用时: {minute}:{seconds} 击杀: {int}
-            if( nr_printer.show_player_extraction )
-            {
-                nr_printer.PrintPlayerExtraction(client, engine_time);
-            }
-
             nr_player_data[client].cleanup_stats();
         }
     }
@@ -868,13 +775,6 @@ void On_watermelon_rescue(Event event, const char[] name, bool dontBroadcast)
     else    // [提示] {name} 的 steam id 为 0, 无法记录
     {
         LogMessage("On_watermelon_rescue | client: %d | name: %N | steam: %d | aready: %d |", client, client, nr_player_data[client].steam_id, nr_player_data[client].aready_submit_data) ;
-    }
-
-    // 输出 西瓜救援成功
-    // [提示] Name 拯救了西瓜!
-    if( nr_printer.show_watermelon_rescue )
-    {
-        nr_printer.PrintWatermelonRescue(client);
     }
 }
 
