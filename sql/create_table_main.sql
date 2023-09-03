@@ -36,7 +36,7 @@ ENGINE = INNODB ;
 -- DROP TABLE IF EXISTS round_info;
 CREATE TABLE IF NOT EXISTS round_info (
     `id`                        INT UNSIGNED        NOT NULL    AUTO_INCREMENT,
-    `map_id`                    INT                 NOT NULL    UNSIGNED COMMENT '地图id',
+    `map_id`                    INT UNSIGNED        NOT NULL    COMMENT '地图id',
 
     `practice`                  TINYINT             NOT NULL    COMMENT '是否为练习回合',
     `start_time`                DOUBLE              NOT NULL    COMMENT 'Round 开始时间',
