@@ -21,16 +21,16 @@
 #include <smlib/crypt>
 
 #define  INCLUDE_MANAGER
-#define  PLUGIN_VERSION                 "v1.0.2-230904"
+#define  PLUGIN_VERSION                 "v1.0.3-230904"
 #define  PLUGIN_DESCRIPTION             "NMRIH data record system"
 
 public Plugin myinfo =
 {
-    name        = "NMRIH Notice",
+    name        = "NMRIH Record System",
     author      = "F1F88",
     description = PLUGIN_DESCRIPTION,
     version     = PLUGIN_VERSION,
-    url         = "https://github.com/F1F88/nmrih-notice"
+    url         = "https://github.com/F1F88/nmrih-record-system"
 };
 
 #include "nmrih-record/dbi.sp"
@@ -63,9 +63,9 @@ public void OnPluginStart()
     LoadTranslations("nmrih-record.phrases");
 
     ConVar convar;
+    CreateConVar("sm_nr_version", PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
     (convar = CreateConVar("sm_nr_global_timer_interval", "60.0", "全局定时器时间间隔(秒) | 不建议修改 | 目前用于维护数据库连接与更新玩家游戏时长")).AddChangeHook(OnGlobalConVarChange);
     cv_global_timer_interval = convar.FloatValue;
-    CreateConVar("sm_nr_version", PLUGIN_VERSION, PLUGIN_DESCRIPTION, FCVAR_SPONLY | FCVAR_DONTRECORD);
 
     // dbi
     nr_dbi = new NRDbi();
