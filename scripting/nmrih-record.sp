@@ -17,11 +17,10 @@
 #define  REQUIRE_EXTENSIONS
 
 #include <multicolors>
-#include <vscript_proxy>
 #include <smlib/crypt>
 
 #define  INCLUDE_MANAGER
-#define  PLUGIN_VERSION                 "v1.0.3-230904"
+#define  PLUGIN_VERSION                 "v1.0.4-230910"
 #define  PLUGIN_DESCRIPTION             "NMRIH data record system"
 
 public Plugin myinfo =
@@ -53,8 +52,8 @@ float    cv_global_timer_interval;
 
 public APLRes AskPluginLoad2(Handle myself, bool late, char[] error, int err_max)
 {
-    LoadOffset_Player();
-    return APLRes_Success;
+    LoadCookieNative_Player();
+    return LoadOffset_Player(error, err_max) ? APLRes_Success : APLRes_Failure;
 }
 
 public void OnPluginStart()
@@ -552,13 +551,13 @@ Action On_player_TakeDamage(int victim, int& attacker, int& inflictor, float& da
         nr_player_data[victim].hurt_dmg_total += real_dmg;
         if( victim == inflictor )                                   // 武器也是自己
         {
-            if( GetEntData(victim, nr_player_func.offset_bleedingOut, 1) && damagetype == DMG_RADIATION && FloatCompare(damage, nr_player_func.bleedout_dmg) == 0 ) // 流血
+            if( nr_player_func.IsBleeding(victim) && nr_player_func.DMG_IsBleeding(damage, damagetype) )        // 流血
             {
                 nr_player_data[victim].hurt_cnt_bleed += 1;
                 nr_player_data[victim].hurt_dmg_bleed += real_dmg;
                 strcopy(weapon_name, MAX_WEAPON_LEN, "_bleed");
             }
-            else if( RunEntVScriptBool(victim, "IsInfected()") && damagetype == DMG_GENERIC && FloatCompare(damage, 100.0) == 0 ) // 感染
+            else if( nr_player_func.IsInfected(victim) && nr_player_func.DMG_IsInfected(damage, damagetype) )   // 感染
             {
                 strcopy(weapon_name, MAX_WEAPON_LEN, "_infected");
             }
@@ -784,22 +783,22 @@ public void On_item_given(Event event, char[] name, bool dontBroadcast)
     char classname[MAX_WEAPON_LEN];
     event.GetString("classname", classname, MAX_WEAPON_LEN);
 
-    if( StrContains(classname, "bandages") != -1 )
+    if( StrContains(classname, "bandages") != -1 )          // item_bandages
     {
         nr_player_data[receiver].share_cnt_bandages += 1;
         nr_player_data[giver].receive_cnt_bandages += 1;
     }
-    else if( StrContains(classname, "first_aid") != -1 )
+    else if( StrContains(classname, "first_aid") != -1 )    // item_first_aid
     {
         nr_player_data[receiver].share_cnt_first_aid += 1;
         nr_player_data[giver].receive_cnt_first_aid += 1;
     }
-    else if( StrContains(classname, "pills") != -1 )
+    else if( StrContains(classname, "pills") != -1 )        // item_pills
     {
         nr_player_data[receiver].share_cnt_pills += 1;
         nr_player_data[giver].receive_cnt_pills += 1;
     }
-    else if( StrContains(classname, "gene_therapy") != -1 )
+    else if( StrContains(classname, "gene_therapy") != -1 ) // item_gene_therapy
     {
         nr_player_data[receiver].share_cnt_gene_therapy += 1;
         nr_player_data[giver].receive_cnt_gene_therapy += 1;

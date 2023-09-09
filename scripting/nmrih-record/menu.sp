@@ -113,7 +113,7 @@ Action Cmd_Menu_Catalog(int client, int args)
     char item_display[128];
     Menu menu = new Menu(MenuHandler_Catalog, MenuAction_Select | MenuAction_End);
     menu.ExitBackButton = false;
-    menu.SetTitle("%T - %T", "Menu Title Head", client, "Menu Catalog title", client, NR_VERSION);
+    menu.SetTitle("%T - %T", "Menu Title Head", client, "Menu Catalog title", client, PLUGIN_VERSION);
 
     if( cv_menu_top_enabled )
     {

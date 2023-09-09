@@ -108,7 +108,9 @@ enum struct rank_data
     float   take_time;
 }
 
-int             private_player_offset_bleedingOut;
+int             private_player_offset_bleedingOut
+                , private_player_offset_InfectionTime
+                , private_player_offset_InfectionDeathTime;
 
 
 float           cv_player_ff_factor
@@ -529,8 +531,21 @@ methodmap NRPlayerFunc __nullable__
         public get()                    { return cv_player_spawn_penalty_factor; }
     }
 
-    property int offset_bleedingOut {
-        public get()                    { return private_player_offset_bleedingOut; }
+    public bool DMG_IsBleeding(float damage, int damagetype) {
+        return ! FloatCompare(damage, cv_player_bleedout_dmg) && damagetype == DMG_RADIATION;
+    }
+
+    public bool DMG_IsInfected(float damage, int damagetype) {
+        return ! FloatCompare(damage, 100.0) && damagetype == DMG_GENERIC;
+    }
+
+
+    public bool IsBleeding(int client) {
+        return GetEntData(client, private_player_offset_bleedingOut, 1) == 1;
+    }
+
+    public bool IsInfected(int client) {
+        return GetEntDataFloat(client, private_player_offset_InfectionTime) > 0.0 && FloatCompare(GetEntDataFloat(client, private_player_offset_InfectionDeathTime), GetGameTime()) == 1;
     }
 
     /**
@@ -650,7 +665,7 @@ taken_cnt_pills=taken_cnt_pills+%d, taken_cnt_gene_therapy=taken_cnt_gene_therap
     }
 }
 
-void LoadNative_Player()
+void LoadCookieNative_Player()
 {
     MarkNativeAsOptional("Cookie.Cookie");
     MarkNativeAsOptional("Cookie.Get");
@@ -660,13 +675,24 @@ void LoadNative_Player()
     MarkNativeAsOptional("SetCookieMenuItem");
 }
 
-void LoadOffset_Player()
+bool LoadOffset_Player(char[] error, int err_max)
 {
-    private_player_offset_bleedingOut = FindSendPropInfo("CNMRiH_Player", "_bleedingOut");
-    if( private_player_offset_bleedingOut <= 0 )
+    if( (private_player_offset_bleedingOut          = FindSendPropInfo("CNMRiH_Player", "_bleedingOut")) < 1 )
     {
-        LogError("Can't find offset 'CNMRiH_Player::_bleedingOut'!");
+        strcopy(error, err_max,     "Can't find offset 'CNMRiH_Player::_bleedingOut'!");
+        return false;
     }
+    if( (private_player_offset_InfectionTime        = FindSendPropInfo("CNMRiH_Player", "m_flInfectionTime")) < 1 )
+    {
+        strcopy(error, err_max,     "Can't find offset 'CNMRiH_Player::m_flInfectionTime'!");
+        return false;
+    }
+    if( (private_player_offset_InfectionDeathTime   = FindSendPropInfo("CNMRiH_Player", "m_flInfectionDeathTime")) < 1 )
+    {
+        strcopy(error, err_max,     "Can't find offset 'CNMRiH_Player::m_flInfectionDeathTime'!");
+        return false;
+    }
+    return true;
 }
 
 void LoadConVar_Player()
